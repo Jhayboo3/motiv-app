@@ -29,11 +29,10 @@
   </script>
   
   <style>
-    .quote-shadow { text-shadow: 0 4px 20px rgba(0,0,0,1); }
+    .quote-shadow { text-shadow: 0 4px 24px rgba(0,0,0,0.8); }
     .text-shadow-sm { text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
-    /* Ensures smooth font rendering on export */
     #quote-hero-card { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    .bg-transition { transition: opacity 0.5s ease-in-out; }
+    .bg-transition { transition: opacity 0.6s ease-in-out; }
   </style>
 </head>
 <body class="bg-dark text-gray-100 font-body min-h-screen">
@@ -52,7 +51,7 @@
   <main class="p-4 max-w-2xl mx-auto">
     
     <div id="page-quotes" class="page block">
-      <div id="quote-hero-card" class="relative rounded-[32px] overflow-hidden shadow-2xl bg-black" style="aspect-ratio: 9/16; width: 100%;">
+      <div id="quote-hero-card" class="relative rounded-[40px] overflow-hidden shadow-2xl bg-black" style="aspect-ratio: 9/16; width: 100%;">
         
         <img id="dynamic-bg" 
              crossorigin="anonymous"
@@ -60,35 +59,34 @@
              class="absolute inset-0 w-full h-full object-cover bg-transition" 
              alt="Daily Motivation">
 
-        <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,0.98) 100%);"></div>
+        <div class="absolute inset-0" style="background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);"></div>
 
-        <div class="absolute top-8 right-8 z-10">
-          <span class="font-head text-[10px] tracking-[0.4em] uppercase text-white/40">Motiv</span>
+        <div class="absolute top-10 right-10 z-20">
+          <span class="font-head text-[12px] tracking-[0.4em] uppercase text-white font-800 drop-shadow-md">Motiv</span>
         </div>
 
-        <div class="absolute bottom-0 left-0 right-0 z-10 p-8 pb-20"> 
+        <div class="absolute inset-0 z-10 flex flex-col items-center justify-center p-10 text-center">
           
-          <div class="flex items-center justify-between mb-8">
-            <span class="font-head text-[10px] tracking-[0.3em] uppercase text-white/80 font-bold text-shadow-sm">Daily Wisdom</span>
-            <div id="hero-date" class="bg-solar text-black font-bold rounded-full px-4 py-0 text-[11px] flex items-center justify-center h-7 shadow-xl leading-none"></div>
-          </div>
+          <span class="font-head text-[10px] tracking-[0.3em] uppercase text-white/90 font-bold mb-6 text-shadow-sm">Daily Wisdom</span>
 
-          <p id="hero-text" class="font-head italic text-white quote-shadow mb-6 leading-tight" style="font-size: clamp(24px, 6.5vw, 32px); font-weight: 700;"></p>
+          <p id="hero-text" class="font-head italic text-white quote-shadow mb-6 leading-tight" style="font-size: clamp(26px, 7vw, 38px); font-weight: 700;"></p>
           
-          <div class="mb-10">
+          <div class="flex flex-col items-center mb-8">
             <p id="hero-author" class="font-body font-bold text-white text-shadow-sm mb-1 text-[18px]"></p>
-            <p id="hero-year" class="font-body font-bold text-shadow-sm text-[14px] text-solar"></p>
+            <p id="hero-year" class="font-body font-bold text-shadow-sm text-[13px] text-solar"></p>
           </div>
 
-          <div class="flex gap-3" data-html2canvas-ignore="true">
-            <button onclick="downloadQuoteImage()" id="save-btn" class="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-4 rounded-2xl font-bold transition-all text-[13px] backdrop-blur-md">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              <span>Save Image</span>
-            </button>
-            <button onclick="refreshBackground()" class="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            </button>
-          </div>
+          <div id="hero-date" class="bg-solar text-black font-bold rounded-full px-5 h-8 text-[11px] flex items-center justify-center shadow-2xl leading-none"></div>
+        </div>
+
+        <div class="absolute bottom-10 left-0 right-0 z-20 px-10 flex gap-3" data-html2canvas-ignore="true">
+          <button onclick="downloadQuoteImage()" id="save-btn" class="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-4 rounded-2xl font-bold transition-all text-[13px] backdrop-blur-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Save Quote</span>
+          </button>
+          <button onclick="refreshBackground()" class="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all backdrop-blur-md">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -164,7 +162,7 @@
 
     let goals = [
       { name: 'Morning Meditation', done: true, progress: 100 },
-      { name: 'Read for 30 mins', done: false, progress: 30 }
+      { name: 'Push-up Challenge', done: false, progress: 40 }
     ];
 
     const today = new Date();
@@ -174,7 +172,7 @@
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
       const q = quotes[dayOfYear % quotes.length];
       
-      document.getElementById('hero-text').textContent = `"${q.text}"`;
+      document.getElementById('hero-text').textContent = `“${q.text}”`;
       document.getElementById('hero-author').textContent = q.author;
       document.getElementById('hero-year').textContent = q.year;
 
@@ -232,34 +230,30 @@
       if(val) { goals.push({name: val, done: false, progress: 0}); renderDashboard(); closeModal(); document.getElementById('goal-input').value = ''; }
     }
 
-    // --- HIGH-QUALITY EXPORT ---
+    // --- EXPORT LOGIC ---
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
       const btn = document.getElementById('save-btn');
       const originalHTML = btn.innerHTML;
 
       btn.disabled = true;
-      btn.innerHTML = `<span>Exporting...</span>`;
+      btn.innerHTML = `<span>Processing...</span>`;
 
       try {
         const canvas = await html2canvas(card, {
           useCORS: true, 
-          scale: 3, // High DPI
+          scale: 3, 
           backgroundColor: '#000000',
-          logging: false,
-          onclone: (clonedDoc) => {
-             // Force alignment check on the clone
-             clonedDoc.getElementById('hero-date').style.display = 'flex';
-             clonedDoc.getElementById('hero-date').style.alignItems = 'center';
-          }
+          logging: false
         });
 
         const link = document.createElement('a');
         link.download = `motiv-${today.toISOString().slice(0,10)}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.click();
-        btn.innerHTML = `<span>Saved!</span>`;
+        btn.innerHTML = `<span>Ready!</span>`;
       } catch (e) {
+        console.error("Export failed:", e);
         btn.innerHTML = `<span>Error</span>`;
       } finally {
         setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
