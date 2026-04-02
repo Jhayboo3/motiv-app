@@ -4,9 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
   <script>
     tailwind.config = {
       theme: {
@@ -25,318 +27,245 @@
       }
     }
   </script>
+  
   <style>
-    .quote-shadow { text-shadow: 0 3px 12px rgba(0,0,0,0.9); }
-    .text-shadow-sm { text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+    .quote-shadow { text-shadow: 0 4px 16px rgba(0,0,0,0.98); }
+    .text-shadow-sm { text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
+    .bg-transition { transition: background-image 0.8s ease-in-out; }
+    /* Prevent text shifting during capture */
+    #quote-hero-card { -webkit-font-smoothing: antialiased; font-variant-ligatures: none; }
   </style>
 </head>
 <body class="bg-dark text-gray-100 font-body min-h-screen">
 
-  <!-- NAV -->
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-dark/80 backdrop-blur-md border-b border-white/10">
     <div class="font-head font-800 text-xl flex items-center gap-2">
       <span class="w-3 h-3 bg-brand rounded-full animate-pulse"></span> Motiv
     </div>
     <div class="flex bg-surface p-1 rounded-xl">
-      <button onclick="showPage('quotes')" id="tab-quotes"
-              class="px-5 py-2 text-sm font-medium rounded-lg transition-all bg-brand text-white shadow-lg">Quotes</button>
-      <button onclick="showPage('dashboard')" id="tab-dashboard"
-              class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
+      <button onclick="showPage('quotes')" id="tab-quotes" class="px-5 py-2 text-sm font-medium rounded-lg transition-all bg-brand text-white shadow-lg">Quotes</button>
+      <button onclick="showPage('dashboard')" id="tab-dashboard" class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
     </div>
     <div id="nav-date" class="hidden md:block text-sm font-bold text-solar tracking-wide"></div>
   </nav>
 
   <main class="p-4 max-w-2xl mx-auto">
-
-    <!-- QUOTES PAGE -->
+    
     <div id="page-quotes" class="page block">
-      <div id="quote-hero-card"
-           class="relative rounded-[28px] overflow-hidden shadow-2xl"
-           style="aspect-ratio: 9/16; width: 100%;">
+      <div id="quote-hero-card" class="relative rounded-[28px] overflow-hidden shadow-2xl" style="aspect-ratio: 9/16; width: 100%;">
+        
+        <div id="dynamic-bg" class="absolute inset-0 bg-cover bg-center bg-no-repeat bg-transition"></div>
 
-        <!-- Background image fills card -->
-        <div id="dynamic-bg"
-             class="absolute inset-0 bg-cover bg-center bg-no-repeat"></div>
+        <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 65%, rgba(0,0,0,0.95) 100%);"></div>
 
-        <!-- Gradient: clear top, dark at bottom -->
-        <div class="absolute inset-0"
-             style="background: linear-gradient(to bottom,
-               rgba(0,0,0,0.0)  0%,
-               rgba(0,0,0,0.0) 35%,
-               rgba(0,0,0,0.55) 58%,
-               rgba(0,0,0,0.88) 75%,
-               rgba(0,0,0,0.97) 100%);"></div>
-
-        <!-- MOTIV watermark top right -->
-        <div class="absolute top-5 right-6 z-10">
+        <div class="absolute top-6 right-8 z-10">
           <span class="font-head text-[11px] tracking-[0.3em] uppercase text-white/40">Motiv</span>
         </div>
 
-        <!-- Content pinned to bottom, with enough padding so nothing clips -->
-        <div class="absolute bottom-0 left-0 right-0 z-10 p-6" style="padding-bottom: 28px;">
-
-          <!-- Daily Wisdom label + Date badge on same row -->
-          <div class="flex items-center justify-between mb-5">
-            <span class="font-head text-[10px] tracking-[0.28em] uppercase text-white/75 font-bold text-shadow-sm">
-              Daily Wisdom
-            </span>
-            <span id="hero-date"
-                  style="background:#FFD600; color:#000; font-weight:700; font-size:11px;
-                         padding: 5px 12px; border-radius: 999px; white-space: nowrap;
-                         line-height: 1.4; display: inline-block;">
-            </span>
+        <div class="absolute bottom-0 left-0 right-0 z-10 p-8 pb-14">
+          
+          <div class="flex items-center justify-between mb-6">
+            <span class="font-head text-[10px] tracking-[0.25em] uppercase text-white/80 font-bold text-shadow-sm">Daily Wisdom</span>
+            <div id="hero-date" class="flex items-center justify-center bg-solar text-black font-bold rounded-full px-4 h-7 text-[11px] leading-none shadow-lg"></div>
           </div>
 
-          <!-- Quote -->
-          <p id="hero-text"
-             class="font-head italic text-white quote-shadow mb-4 leading-snug"
-             style="font-size: clamp(20px, 5.5vw, 26px); font-weight: 700;"></p>
+          <p id="hero-text" class="font-head italic text-white quote-shadow mb-5 leading-snug" style="font-size: clamp(22px, 6vw, 28px); font-weight: 700;"></p>
+          
+          <div>
+            <p id="hero-author" class="font-body font-bold text-white text-shadow-sm mb-1 text-[16px]"></p>
+            <p id="hero-year" class="font-body font-bold text-shadow-sm mb-8 text-[14px] text-solar"></p>
+          </div>
 
-          <!-- Author -->
-          <p id="hero-author"
-             class="font-body font-bold text-white text-shadow-sm mb-1"
-             style="font-size: 15px;"></p>
-
-          <!-- Year -->
-          <p id="hero-year"
-             class="font-body font-bold text-shadow-sm mb-5"
-             style="font-size: 13px; color: #FFD600;"></p>
-
-          <!-- Buttons — excluded from download -->
           <div class="flex gap-3" data-html2canvas-ignore="true">
-            <button onclick="downloadQuoteImage()" id="save-btn"
-                    class="flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-5 py-2.5 rounded-xl font-bold transition-all"
-                    style="font-size:13px; backdrop-filter: blur(8px);">
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-              <span>Save as Image</span>
+            <button onclick="downloadQuoteImage()" id="save-btn" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-3 rounded-xl font-bold transition-all text-[13px] backdrop-blur-md">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Save Image</span>
+            </button>
+            <button onclick="refreshBackground()" class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             </button>
           </div>
-
         </div>
       </div>
     </div>
 
-    <!-- DASHBOARD PAGE -->
-    <div id="page-dashboard" class="page hidden space-y-6 pt-2">
+    <div id="page-dashboard" class="page hidden space-y-6 pt-4">
       <div class="flex flex-wrap justify-between items-end gap-4">
         <h2 class="font-head text-4xl font-800">Keep<br>pushing, <span class="text-brand">champ.</span></h2>
-        <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm">🔥 7 day streak</div>
+        <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm shadow-[0_0_15px_rgba(255,214,0,0.1)]">🔥 7 day streak</div>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div class="bg-brand p-6 rounded-3xl text-white shadow-xl shadow-brand/20">
-          <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2">Goals Done</p>
+        <div class="bg-brand p-6 rounded-3xl text-white shadow-xl">
+          <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Goals Done</p>
           <p id="goals-done" class="font-head text-4xl font-800">0</p>
         </div>
         <div class="bg-surface p-6 rounded-3xl border border-white/5">
-          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Active</p>
+          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Active</p>
           <p id="goals-active" class="font-head text-4xl font-800 text-white">0</p>
         </div>
         <div class="bg-surface p-6 rounded-3xl border border-white/5 col-span-2 md:col-span-1">
-          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Completion</p>
+          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Completion</p>
           <p id="goals-pct" class="font-head text-4xl font-800 text-solar">0%</p>
         </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
-          <h3 class="font-head text-sm mb-6 text-gray-400 uppercase tracking-wider">Weekly Activity</h3>
-          <div id="bar-chart" class="flex items-end gap-3 h-32 mb-4"></div>
-          <div id="bar-days" class="flex justify-between px-1"></div>
+            <h3 class="font-head text-xs mb-6 text-gray-400 uppercase tracking-widest">Weekly Activity</h3>
+            <div id="bar-chart" class="flex items-end gap-3 h-32 mb-4"></div>
+            <div id="bar-days" class="flex justify-between px-1"></div>
         </div>
         <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
-          <h3 class="font-head text-sm mb-6 text-gray-400 uppercase tracking-wider">Today's Tasks</h3>
+          <h3 class="font-head text-xs mb-6 text-gray-400 uppercase tracking-widest">Today's Tasks</h3>
           <div id="goal-items" class="space-y-4 mb-6"></div>
-          <button onclick="openModal()"
-                  class="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 hover:border-brand hover:text-brand transition-all font-medium bg-white/5 hover:bg-brand/5">
-            + Add new goal
-          </button>
+          <button onclick="openModal()" class="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 hover:border-brand hover:text-brand transition-all font-bold bg-white/5">+ Add new goal</button>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- MODAL -->
   <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
     <div class="bg-surface border border-white/10 w-full max-w-sm rounded-[32px] p-8 shadow-2xl">
       <h3 class="font-head text-xl mb-6 text-white">New Goal</h3>
-      <input type="text" id="goal-input" placeholder="What are we crushing today?"
-             class="w-full bg-dark border border-white/10 rounded-xl p-4 mb-6 outline-none focus:border-brand text-sm text-white placeholder-gray-600 transition-colors"/>
+      <input type="text" id="goal-input" placeholder="What's next?" class="w-full bg-dark border border-white/10 rounded-xl p-4 mb-6 outline-none focus:border-brand text-white transition-colors">
       <div class="flex gap-3">
         <button onclick="closeModal()" class="flex-1 py-3 text-gray-400 font-medium hover:text-white transition-colors">Cancel</button>
-        <button onclick="addGoal()" class="flex-1 bg-brand py-3 rounded-xl font-bold text-white hover:bg-[#ff7122] transition-colors">Add Goal</button>
+        <button onclick="addGoal()" class="flex-1 bg-brand py-3 rounded-xl font-bold text-white shadow-lg">Add Goal</button>
       </div>
     </div>
   </div>
 
   <script>
+    // --- APP DATA ---
     const quotes = [
       { text: "The secret of getting ahead is getting started.", author: "Mark Twain", year: "1890" },
-      { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson", year: "1945" },
+      { text: "It always seems impossible until it's done.", author: "Nelson Mandela", year: "2001" },
       { text: "Success is not final; failure is not fatal.", author: "Winston Churchill", year: "1941" },
       { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt", year: "1910" },
-      { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", year: "2005" },
-      { text: "It always seems impossible until it's done.", author: "Nelson Mandela", year: "2001" },
-      { text: "Stay hungry, stay foolish.", author: "Stewart Brand", year: "1974" },
-      { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn", year: "1980" },
-      { text: "Little by little, one travels far.", author: "J.R.R. Tolkien", year: "1954" },
       { text: "Dream big and dare to fail.", author: "Norman Vaughan", year: "1994" },
-      { text: "Energy and persistence conquer all things.", author: "Benjamin Franklin", year: "1758" },
-      { text: "Act as if what you do makes a difference. It does.", author: "William James", year: "1897" },
+      { text: "Stay hungry, stay foolish.", author: "Steve Jobs", year: "2005" },
+      { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn", year: "1980" },
+      { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson", year: "1945" },
+      { text: "The best way to predict the future is to create it.", author: "Peter Drucker", year: "1963" },
+      { text: "Your time is limited, so don't waste it living someone else's life.", author: "Steve Jobs", year: "2005" }
+      // Add more here to reach 365!
     ];
 
-    const bgImages = [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&q=80',
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1080&q=80',
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1080&q=80',
-      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1080&q=80',
-      'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1080&q=80',
-      'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=1080&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1080&q=80',
-      'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1080&q=80',
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
-      'https://images.unsplash.com/photo-1511497584788-876760111969?w=1080&q=80',
-      'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=1080&q=80',
-      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1080&q=80',
+    const bgKeywords = ['nature', 'mountains', 'galaxy', 'forest', 'ocean', 'abstract', 'minimal'];
+    let goals = [
+      { name: 'Morning Meditation', done: true, progress: 100 },
+      { name: 'Read for 30 mins', done: false, progress: 30 }
     ];
 
+    // --- CORE LOGIC ---
     function getDayOfYear(d) {
       return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
     }
 
-    const today    = new Date();
+    const today = new Date();
     const dayIndex = getDayOfYear(today);
 
     function init() {
+      // Set daily quote based on the day of the year
       const q = quotes[dayIndex % quotes.length];
-      document.getElementById('hero-text').textContent   = `"${q.text}"`;
+      document.getElementById('hero-text').textContent = `"${q.text}"`;
       document.getElementById('hero-author').textContent = q.author;
-      document.getElementById('hero-year').textContent   = q.year;
+      document.getElementById('hero-year').textContent = q.year;
 
-      document.getElementById('nav-date').textContent  =
-        today.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
-      document.getElementById('hero-date').textContent =
-        today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+      // Update Dates
+      document.getElementById('nav-date').textContent = today.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
+      document.getElementById('hero-date').textContent = today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
 
-      document.getElementById('dynamic-bg').style.backgroundImage =
-        `url('${bgImages[dayIndex % bgImages.length]}')`;
-
+      refreshBackground();
       renderDashboard();
+    }
+
+    function refreshBackground() {
+      const keyword = bgKeywords[Math.floor(Math.random() * bgKeywords.length)];
+      document.getElementById('dynamic-bg').style.backgroundImage = `url('https://source.unsplash.com/featured/?${keyword}&sig=${Math.random()}')`;
     }
 
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${id}`).classList.remove('hidden');
       const isQ = id === 'quotes';
-      document.getElementById('tab-quotes').className    = isQ  ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white';
+      document.getElementById('tab-quotes').className = isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white';
       document.getElementById('tab-dashboard').className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white';
     }
 
-    let goals = [
-      { name: 'Morning Meditation', done: true,  progress: 100 },
-      { name: 'Read for 30 mins',   done: false, progress: 30  },
-    ];
-
+    // --- DASHBOARD LOGIC ---
     function renderDashboard() {
       document.getElementById('goal-items').innerHTML = goals.map((g, i) => `
         <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-          <div onclick="toggleGoal(${i})"
-               class="w-6 h-6 rounded-full border-2 cursor-pointer transition-all flex items-center justify-center flex-shrink-0
-                      ${g.done ? 'bg-brand border-brand' : 'border-white/20'}">
+          <div onclick="toggleGoal(${i})" class="w-6 h-6 rounded-full border-2 cursor-pointer flex items-center justify-center flex-shrink-0 ${g.done ? 'bg-brand border-brand' : 'border-white/20'}">
             ${g.done ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-bold truncate ${g.done ? 'line-through text-gray-500' : 'text-gray-100'}">${g.name}</p>
-            <div class="w-full bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
+            <div class="w-full bg-white/10 h-1 rounded-full mt-2 overflow-hidden">
               <div class="bg-brand h-full rounded-full transition-all duration-500" style="width:${g.done ? 100 : g.progress}%"></div>
             </div>
           </div>
         </div>`).join('');
 
-      const done = goals.filter(g => g.done).length;
-      document.getElementById('goals-done').textContent   = done;
-      document.getElementById('goals-active').textContent = goals.length - done;
-      document.getElementById('goals-pct').textContent    = goals.length ? Math.round((done / goals.length) * 100) + '%' : '0%';
+      const doneCount = goals.filter(g => g.done).length;
+      document.getElementById('goals-done').textContent = doneCount;
+      document.getElementById('goals-active').textContent = goals.length - doneCount;
+      document.getElementById('goals-pct').textContent = goals.length ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
 
-      const bars = [40,70,45,90,65,80,20];
+      // Mock Chart
+      const bars = [40, 70, 45, 90, 65, 80, 20];
       document.getElementById('bar-chart').innerHTML = bars.map(h => `
-        <div class="flex-1 bg-white/5 rounded-t-lg relative overflow-hidden h-full">
-          <div class="absolute bottom-0 w-full bg-solar" style="height:${h}%"></div>
+        <div class="flex-1 bg-white/5 rounded-t-lg relative h-full">
+          <div class="absolute bottom-0 w-full bg-solar rounded-t-sm" style="height:${h}%"></div>
         </div>`).join('');
-      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d =>
-        `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
+      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
     }
 
     function toggleGoal(i) { goals[i].done = !goals[i].done; renderDashboard(); }
-
-    function openModal()  {
-      document.getElementById('modal').classList.remove('hidden');
-      document.getElementById('modal').classList.add('flex');
-      document.getElementById('goal-input').focus();
-    }
-    function closeModal() {
-      document.getElementById('modal').classList.add('hidden');
-      document.getElementById('modal').classList.remove('flex');
-    }
+    function openModal() { document.getElementById('modal').classList.replace('hidden', 'flex'); document.getElementById('goal-input').focus(); }
+    function closeModal() { document.getElementById('modal').classList.replace('flex', 'hidden'); }
     function addGoal() {
       const val = document.getElementById('goal-input').value.trim();
-      if (val) {
-        goals.push({ name: val, done: false, progress: 0 });
-        renderDashboard(); closeModal();
-        document.getElementById('goal-input').value = '';
-      }
+      if(val) { goals.push({name: val, done: false, progress: 0}); renderDashboard(); closeModal(); document.getElementById('goal-input').value = ''; }
     }
 
-    // DOWNLOAD — captures exactly what's on screen, no oversizing
+    // --- HIGH QUALITY EXPORT ---
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
-      const btn  = document.getElementById('save-btn');
+      const btn = document.getElementById('save-btn');
       const orig = btn.innerHTML;
 
       btn.disabled = true;
-      btn.innerHTML = `<svg class="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-      </svg><span>Processing...</span>`;
+      btn.innerHTML = `<span>Processing...</span>`;
 
       try {
-        const rect = card.getBoundingClientRect();
-        const dpr  = Math.min(window.devicePixelRatio || 1, 3);
-
         const canvas = await html2canvas(card, {
           useCORS: true,
-          allowTaint: true,
-          scale: dpr,
-          width:  Math.round(rect.width),
-          height: Math.round(rect.height),
-          windowWidth:  document.documentElement.scrollWidth,
-          windowHeight: document.documentElement.scrollHeight,
+          scale: 3, // High DPI for crispness
           backgroundColor: '#0E0E0E',
-          logging: false,
-          imageTimeout: 15000,
+          onclone: (doc) => {
+            // Ensure the date badge is perfectly centered in the captured image
+            const badge = doc.getElementById('hero-date');
+            badge.style.display = 'flex';
+            badge.style.alignItems = 'center';
+            badge.style.justifyContent = 'center';
+          }
         });
 
         const link = document.createElement('a');
         link.download = `motiv-${today.toISOString().slice(0,10)}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.93);
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.click();
-
-        btn.innerHTML = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-        </svg><span>Saved!</span>`;
+        btn.innerHTML = `<span>Saved!</span>`;
       } catch (e) {
-        btn.innerHTML = `<span>Error — Try Again</span>`;
+        console.error(e);
+        btn.innerHTML = `<span>Error</span>`;
       } finally {
-        setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+        setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
       }
     }
-
-    document.getElementById('modal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
 
     window.onload = init;
   </script>
