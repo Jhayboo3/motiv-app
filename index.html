@@ -4,22 +4,18 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            brand: '#FF5C00',     /* vibrant orange */
-            solar: '#FFD600',     /* bright yellow for dates/highlights */
-            dark: '#0E0E0E',      /* deep background */
-            surface: '#1A1A1A',   /* card backgrounds */
+            brand: '#FF5C00',
+            solar: '#FFD600',
+            dark: '#0E0E0E',
+            surface: '#1A1A1A',
           },
           fontFamily: {
             head: ['Syne', 'sans-serif'],
@@ -29,10 +25,7 @@
       }
     }
   </script>
-  
   <style>
-    /* Smooth background transitions and text legibility */
-    .bg-transition { transition: background-image 0.8s ease-in-out; }
     .quote-shadow { text-shadow: 0 4px 12px rgba(0,0,0,0.8); }
     .text-shadow-sm { text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
   </style>
@@ -51,22 +44,21 @@
   </nav>
 
   <main class="p-6 max-w-5xl mx-auto">
-    
+
     <div id="page-quotes" class="page block">
-      <div id="quote-hero-card" class="relative min-h-[500px] rounded-[32px] overflow-hidden flex flex-col justify-end p-8 md:p-12 shadow-2xl group">
-        
-        <div id="dynamic-bg" class="absolute inset-0 bg-cover bg-center bg-no-repeat bg-transition scale-105 group-hover:scale-100 transition-transform duration-700"></div>
-        
+      <div id="quote-hero-card" class="relative rounded-[32px] overflow-hidden flex flex-col justify-end p-8 md:p-12 shadow-2xl group" style="min-height: 70vh;">
+
+        <div id="dynamic-bg" class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 scale-105 group-hover:scale-100"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/10"></div>
 
         <div class="relative z-10">
           <div class="flex justify-between items-start mb-8">
-            <span class="font-head text-xs tracking-[0.3em] uppercase text-white/90 text-shadow-sm">Daily Wisdom</span>
+            <span class="font-head text-xs tracking-[0.3em] uppercase text-white/90 text-shadow-sm font-bold">Daily Wisdom</span>
             <span id="hero-date" class="bg-solar text-black px-4 py-1.5 rounded-full text-xs font-bold shadow-lg"></span>
           </div>
 
           <h1 id="hero-text" class="font-head text-3xl md:text-5xl font-700 italic leading-tight text-white mb-6 quote-shadow max-w-3xl"></h1>
-          
+
           <div class="mb-10">
             <p id="hero-author" class="text-xl font-bold text-white text-shadow-sm"></p>
             <p id="hero-year" class="text-solar font-bold mt-1 text-shadow-sm"></p>
@@ -77,7 +69,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
               <span>Save as Image</span>
             </button>
-            <button onclick="refreshBackground()" class="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-xl transition-all" title="Change Background">
+            <button onclick="loadBackground(todayBgIndex)" class="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-xl transition-all" title="Refresh Background">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
           </div>
@@ -88,7 +80,7 @@
     <div id="page-dashboard" class="page hidden space-y-6">
       <div class="flex flex-wrap justify-between items-end gap-4">
         <h2 class="font-head text-4xl font-800">Keep<br>pushing, <span class="text-brand">champ.</span></h2>
-        <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm shadow-[0_0_15px_rgba(255,214,0,0.1)]">🔥 7 day streak</div>
+        <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm">🔥 7 day streak</div>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -102,15 +94,15 @@
         </div>
         <div class="bg-surface p-6 rounded-3xl border border-white/5 col-span-2 md:col-span-1">
           <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Completion</p>
-          <p id="goals-pct" class="font-head text-4xl font-800 text-solar drop-shadow-md">0%</p>
+          <p id="goals-pct" class="font-head text-4xl font-800 text-solar">0%</p>
         </div>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
-            <h3 class="font-head text-sm mb-6 text-gray-400 uppercase tracking-wider">Weekly Activity</h3>
-            <div id="bar-chart" class="flex items-end gap-3 h-32 mb-4"></div>
-            <div id="bar-days" class="flex justify-between px-1"></div>
+          <h3 class="font-head text-sm mb-6 text-gray-400 uppercase tracking-wider">Weekly Activity</h3>
+          <div id="bar-chart" class="flex items-end gap-3 h-32 mb-4"></div>
+          <div id="bar-days" class="flex justify-between px-1"></div>
         </div>
         <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
           <h3 class="font-head text-sm mb-6 text-gray-400 uppercase tracking-wider">Today's Tasks</h3>
@@ -121,19 +113,18 @@
     </div>
   </main>
 
-  <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity">
+  <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
     <div class="bg-surface border border-white/10 w-full max-w-sm rounded-[32px] p-8 shadow-2xl">
       <h3 class="font-head text-xl mb-6 text-white">New Goal</h3>
-      <input type="text" id="goal-input" placeholder="What are we crushing today?" class="w-full bg-dark border border-white/10 rounded-xl p-4 mb-6 outline-none focus:border-brand text-sm text-white placeholder-gray-600 transition-colors">
+      <input type="text" id="goal-input" placeholder="What are we crushing today?" class="w-full bg-dark border border-white/10 rounded-xl p-4 mb-6 outline-none focus:border-brand text-sm text-white placeholder-gray-600 transition-colors"/>
       <div class="flex gap-3">
         <button onclick="closeModal()" class="flex-1 py-3 text-gray-400 font-medium hover:text-white transition-colors">Cancel</button>
-        <button onclick="addGoal()" class="flex-1 bg-brand py-3 rounded-xl font-bold text-white shadow-lg shadow-brand/20 hover:bg-[#ff7122] transition-colors">Add Goal</button>
+        <button onclick="addGoal()" class="flex-1 bg-brand py-3 rounded-xl font-bold text-white hover:bg-[#ff7122] transition-colors">Add Goal</button>
       </div>
     </div>
   </div>
 
   <script>
-    // --- DATA ---
     const quotes = [
       { text: "The secret of getting ahead is getting started.", author: "Mark Twain", year: "1890" },
       { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson", year: "1945" },
@@ -141,187 +132,162 @@
       { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt", year: "1910" },
       { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", year: "2005" },
       { text: "It always seems impossible until it's done.", author: "Nelson Mandela", year: "2001" },
-      { text: "Stay hungry, stay foolish.", author: "Stewart Brand", year: "1974" }
+      { text: "Stay hungry, stay foolish.", author: "Stewart Brand", year: "1974" },
+      { text: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn", year: "1980" },
+      { text: "Little by little, one travels far.", author: "J.R.R. Tolkien", year: "1954" },
+      { text: "Dream big and dare to fail.", author: "Norman Vaughan", year: "1994" },
+      { text: "Energy and persistence conquer all things.", author: "Benjamin Franklin", year: "1758" },
+      { text: "Act as if what you do makes a difference. It does.", author: "William James", year: "1897" },
     ];
 
+    const bgKeywords = ['nature','mountain','forest','ocean','sunrise','landscape','stars'];
+
+    // --- STABLE DAY SEED ---
+    // Both the quote and background are locked to the day of the year.
+    // No matter how many times you refresh, same quote + same bg all day.
+    function getDayOfYear(d) {
+      return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+    }
+
     const today = new Date();
-    
-    // --- INITIALIZATION ---
+    const dayIndex = getDayOfYear(today);
+    const todayQuoteIndex = dayIndex % quotes.length;
+    const todayBgIndex   = dayIndex % bgKeywords.length;
+
+    function loadBackground(bgIdx) {
+      // sig is locked to the day number — same image all day, every refresh
+      const key = bgKeywords[bgIdx];
+      document.getElementById('dynamic-bg').style.backgroundImage =
+        `url('https://source.unsplash.com/featured/?${key}&sig=${dayIndex}')`;
+    }
+
     function init() {
-      // Set random quote
-      const q = quotes[Math.floor(Math.random() * quotes.length)];
+      // Quote — locked to today
+      const q = quotes[todayQuoteIndex];
       document.getElementById('hero-text').textContent = `"${q.text}"`;
       document.getElementById('hero-author').textContent = q.author;
       document.getElementById('hero-year').textContent = q.year;
-      
-      // Set dates
-      const dateString = today.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-      const longDateString = today.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-      document.getElementById('nav-date').textContent = dateString;
-      document.getElementById('hero-date').textContent = longDateString;
-      
-      // Load initial images and data
-      refreshBackground();
+
+      // Dates
+      document.getElementById('nav-date').textContent = today.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+      document.getElementById('hero-date').textContent = today.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      // Background — locked to today via sig
+      loadBackground(todayBgIndex);
+
       renderDashboard();
     }
 
-    // --- BACKGROUND LOGIC ---
-    function refreshBackground() {
-      const keywords = ['nature', 'mountain', 'stars', 'ocean', 'landscape', 'forest', 'sunrise'];
-      const randomKey = keywords[Math.floor(Math.random() * keywords.length)];
-      // Append a random timestamp to bypass browser cache and force a new Unsplash image
-      document.getElementById('dynamic-bg').style.backgroundImage = `url('https://source.unsplash.com/featured/?${randomKey}&sig=${Math.random()}')`;
-    }
-
-    // --- NAVIGATION LOGIC ---
+    // --- NAVIGATION ---
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${id}`).classList.remove('hidden');
-      
       const isQuotes = id === 'quotes';
-      document.getElementById('tab-quotes').className = isQuotes 
-        ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg' 
+      document.getElementById('tab-quotes').className = isQuotes
+        ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg'
         : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white';
-      
-      document.getElementById('tab-dashboard').className = !isQuotes 
-        ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg' 
+      document.getElementById('tab-dashboard').className = !isQuotes
+        ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg'
         : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white';
     }
 
-    // --- DASHBOARD LOGIC ---
+    // --- DASHBOARD ---
     let goals = [
       { name: 'Morning Meditation', done: true, progress: 100 },
       { name: 'Read for 30 mins', done: false, progress: 30 }
     ];
 
     function renderDashboard() {
-      const container = document.getElementById('goal-items');
-      container.innerHTML = goals.map((g, i) => `
-        <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 transition-all hover:border-white/10">
-          <div onclick="toggleGoal(${i})" class="w-6 h-6 rounded-full border-2 cursor-pointer transition-all ${g.done ? 'bg-brand border-brand' : 'border-white/20 hover:border-white/40'} flex items-center justify-center shadow-sm">
+      document.getElementById('goal-items').innerHTML = goals.map((g, i) => `
+        <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+          <div onclick="toggleGoal(${i})" class="w-6 h-6 rounded-full border-2 cursor-pointer transition-all ${g.done ? 'bg-brand border-brand' : 'border-white/20 hover:border-white/40'} flex items-center justify-center">
             ${g.done ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
           </div>
           <div class="flex-1">
             <p class="text-sm font-bold ${g.done ? 'line-through text-gray-500' : 'text-gray-100'}">${g.name}</p>
             <div class="w-full bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
-              <div class="bg-brand h-full rounded-full transition-all duration-500" style="width: ${g.done ? 100 : g.progress}%"></div>
+              <div class="bg-brand h-full rounded-full transition-all duration-500" style="width:${g.done ? 100 : g.progress}%"></div>
             </div>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
 
       const done = goals.filter(g => g.done).length;
       document.getElementById('goals-done').textContent = done;
       document.getElementById('goals-active').textContent = goals.length - done;
-      document.getElementById('goals-pct').textContent = goals.length ? Math.round((done/goals.length)*100) + '%' : '0%';
-      
-      // Render mock chart bars
+      document.getElementById('goals-pct').textContent = goals.length ? Math.round((done / goals.length) * 100) + '%' : '0%';
+
       const bars = [40, 70, 45, 90, 65, 80, 20];
-      document.getElementById('bar-chart').innerHTML = bars.map((h, i) => `
-        <div class="flex-1 bg-white/5 rounded-t-lg relative overflow-hidden h-full group">
-          <div class="absolute bottom-0 w-full bg-solar transition-all duration-1000 group-hover:opacity-80" style="height: ${h}%"></div>
-        </div>
-      `).join('');
-      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
+      document.getElementById('bar-chart').innerHTML = bars.map(h => `
+        <div class="flex-1 bg-white/5 rounded-t-lg relative overflow-hidden h-full">
+          <div class="absolute bottom-0 w-full bg-solar" style="height:${h}%"></div>
+        </div>`).join('');
+      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d =>
+        `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
     }
 
-    function toggleGoal(i) { 
-      goals[i].done = !goals[i].done; 
-      renderDashboard(); 
-    }
-    
-    // --- MODAL LOGIC ---
-    function openModal() { 
-      document.getElementById('modal').classList.remove('hidden'); 
-      document.getElementById('modal').classList.add('flex'); 
+    function toggleGoal(i) { goals[i].done = !goals[i].done; renderDashboard(); }
+
+    // --- MODAL ---
+    function openModal() {
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
       document.getElementById('goal-input').focus();
     }
-    function closeModal() { 
-      document.getElementById('modal').classList.add('hidden'); 
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
       document.getElementById('modal').classList.remove('flex');
     }
     function addGoal() {
       const val = document.getElementById('goal-input').value.trim();
-      if(val) { 
-        goals.push({name: val, done: false, progress: 0}); 
-        renderDashboard(); 
-        closeModal(); 
-        document.getElementById('goal-input').value = ''; 
+      if (val) {
+        goals.push({ name: val, done: false, progress: 0 });
+        renderDashboard();
+        closeModal();
+        document.getElementById('goal-input').value = '';
       }
     }
 
-    // --- OPTIMIZED IMAGE EXPORT (9:16 Ratio) ---
+    // --- DOWNLOAD: exact device screen size ---
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
-      const btn = document.getElementById('save-btn');
-      
-      // Provide visual feedback
-      const originalBtnHtml = btn.innerHTML;
-      btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Processing...</span>`;
+      const btn  = document.getElementById('save-btn');
+      const originalHtml = btn.innerHTML;
+
       btn.disabled = true;
+      btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Processing...</span>`;
 
       try {
-        // 1. Capture the element at high scale for clarity
+        const rect  = card.getBoundingClientRect();
+        const dpr   = Math.min(window.devicePixelRatio || 1, 3);
+
         const canvas = await html2canvas(card, {
           useCORS: true,
-          scale: 3, // High quality for retina displays
-          backgroundColor: '#0E0E0E'
+          scale: dpr,
+          width:  Math.round(rect.width),
+          height: Math.round(rect.height),
+          windowWidth:  document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight,
+          backgroundColor: '#0E0E0E',
+          logging: false,
         });
 
-        // 2. Create the "Final" export canvas with a locked 9:16 Aspect Ratio
-        const exportCanvas = document.createElement('canvas');
-        const ctx = exportCanvas.getContext('2d');
-        
-        // Standard mobile resolution
-        exportCanvas.width = 1080;
-        exportCanvas.height = 1920;
-
-        // 3. Fill background to prevent transparent gaps
-        ctx.fillStyle = "#0E0E0E";
-        ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-        // 4. Center-Crop logic: fit the captured card into 9:16 gracefully
-        const imgRatio = canvas.width / canvas.height;
-        const targetRatio = 1080 / 1920;
-        
-        let renderWidth, renderHeight, xOffset, yOffset;
-
-        if (imgRatio > targetRatio) {
-          // Card is wider than 9:16
-          renderHeight = exportCanvas.height;
-          renderWidth = canvas.width * (exportCanvas.height / canvas.height);
-          xOffset = (exportCanvas.width - renderWidth) / 2;
-          yOffset = 0;
-        } else {
-          // Card is taller than 9:16
-          renderWidth = exportCanvas.width;
-          renderHeight = canvas.height * (exportCanvas.width / canvas.width);
-          xOffset = 0;
-          yOffset = (exportCanvas.height - renderHeight) / 2;
-        }
-
-        // 5. Draw the captured card onto the standardized canvas
-        ctx.drawImage(canvas, xOffset, yOffset, renderWidth, renderHeight);
-
-        // 6. Export as an optimized JPEG (90% quality)
         const link = document.createElement('a');
-        link.download = `motiv-${Date.now()}.jpg`;
-        link.href = exportCanvas.toDataURL('image/jpeg', 0.9);
+        link.download = `motiv-${today.toISOString().slice(0, 10)}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
         link.click();
 
-        btn.innerHTML = `<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span>Saved!</span>`;
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <span>Saved!</span>`;
       } catch (err) {
-        console.error("Error generating image:", err);
-        btn.innerHTML = `<span>Error - Try Again</span>`;
+        btn.innerHTML = `<span>Error — Try Again</span>`;
       } finally {
-        setTimeout(() => {
-          btn.innerHTML = originalBtnHtml;
-          btn.disabled = false;
-        }, 2000);
+        setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; }, 2500);
       }
     }
 
-    // Run on load
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
     window.onload = init;
   </script>
 </body>
