@@ -130,7 +130,7 @@
     const supabaseUrl = 'https://yokjotrfbnwauzzajfog.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA';
     
-    // RENAMED TO supabaseClient to avoid SyntaxError
+    // Initialized as supabaseClient to prevent variable conflicts
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     const quotes = [
@@ -163,16 +163,25 @@
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
       const q = quotes[dayOfYear % quotes.length];
       
-      document.getElementById('hero-text').textContent = `“${q.text}”`;
-      document.getElementById('hero-author').textContent = q.author;
-      document.getElementById('hero-year').textContent = q.year;
-      document.getElementById('nav-date').textContent = today.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
-      document.getElementById('hero-date').textContent = today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+      // Safety checks for UI elements
+      if(document.getElementById('hero-text')) document.getElementById('hero-text').textContent = `“${q.text}”`;
+      if(document.getElementById('hero-author')) document.getElementById('hero-author').textContent = q.author;
+      if(document.getElementById('hero-year')) document.getElementById('hero-year').textContent = q.year;
+      
+      // Check if hero-date exists before assigning
+      const heroDateElem = document.getElementById('hero-date');
+      if(heroDateElem) {
+          heroDateElem.textContent = today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+      }
 
       refreshBackground();
       renderDashboard();
       
-      try { await checkUser(); } catch (e) { console.error("Auth init failed"); }
+      try { 
+          await checkUser(); 
+      } catch (e) { 
+          console.error("Auth init failed", e); 
+      }
     }
 
     async function handleAuthClick() {
@@ -201,19 +210,34 @@
 
     function refreshBackground() {
       const randomImg = bgImages[Math.floor(Math.random() * bgImages.length)];
-      document.getElementById('dynamic-bg').src = randomImg + `&sig=${Math.random()}`;
+      const bgElem = document.getElementById('dynamic-bg');
+      if(bgElem) {
+          bgElem.src = randomImg + `&sig=${Math.random()}`;
+      }
     }
 
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(`page-${id}`).classList.remove('hidden');
+      const targetPage = document.getElementById(`page-${id}`);
+      if(targetPage) targetPage.classList.remove('hidden');
+      
       const isQ = id === 'quotes';
-      document.getElementById('tab-quotes').className = isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
-      document.getElementById('tab-dashboard').className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
+      const quotesTab = document.getElementById('tab-quotes');
+      const dashboardTab = document.getElementById('tab-dashboard');
+
+      if(quotesTab) {
+          quotesTab.className = isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
+      }
+      if(dashboardTab) {
+          dashboardTab.className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
+      }
     }
 
     function renderDashboard() {
-      document.getElementById('goal-items').innerHTML = goals.map((g, i) => `
+      const goalContainer = document.getElementById('goal-items');
+      if(!goalContainer) return;
+
+      goalContainer.innerHTML = goals.map((g, i) => `
         <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <div onclick="toggleGoal(${i})" class="w-6 h-6 rounded-full border-2 cursor-pointer flex items-center justify-center flex-shrink-0 ${g.done ? 'bg-brand border-brand' : 'border-white/20'}">
             ${g.done ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
@@ -225,13 +249,22 @@
             </div>
           </div>
         </div>`).join('');
+
       const doneCount = goals.filter(g => g.done).length;
-      document.getElementById('goals-done').textContent = doneCount;
-      document.getElementById('goals-active').textContent = goals.length - doneCount;
-      document.getElementById('goals-pct').textContent = goals.length ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
+      if(document.getElementById('goals-done')) document.getElementById('goals-done').textContent = doneCount;
+      if(document.getElementById('goals-active')) document.getElementById('goals-active').textContent = goals.length - doneCount;
+      if(document.getElementById('goals-pct')) document.getElementById('goals-pct').textContent = goals.length ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
+      
       const bars = [40, 70, 45, 90, 65, 80, 20];
-      document.getElementById('bar-chart').innerHTML = bars.map(h => `<div class="flex-1 bg-white/5 rounded-t-lg relative h-full"><div class="absolute bottom-0 w-full bg-solar rounded-t-sm" style="height:${h}%"></div></div>`).join('');
-      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
+      const barChart = document.getElementById('bar-chart');
+      const barDays = document.getElementById('bar-days');
+
+      if(barChart) {
+          barChart.innerHTML = bars.map(h => `<div class="flex-1 bg-white/5 rounded-t-lg relative h-full"><div class="absolute bottom-0 w-full bg-solar rounded-t-sm" style="height:${h}%"></div></div>`).join('');
+      }
+      if(barDays) {
+          barDays.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
+      }
     }
 
     function toggleGoal(i) { goals[i].done = !goals[i].done; renderDashboard(); }
@@ -245,6 +278,8 @@
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
       const btn = document.getElementById('save-btn');
+      if(!card || !btn) return;
+
       const originalHTML = btn.innerHTML;
       btn.disabled = true;
       btn.innerHTML = `<span>Processing...</span>`;
