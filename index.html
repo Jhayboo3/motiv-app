@@ -4,8 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -36,62 +36,44 @@
     .bg-transition { transition: opacity 0.6s ease-in-out; }
   </style>
 </head>
-<body class="bg-dark text-gray-100 font-body min-h-screen">
-  const supabaseUrl = https://yokjotrfbnwauzzajfog.supabase.co;
-const supabaseKey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA;
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-async function login() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin // This sends them back to your homepage
-    }
-  });
-}
+<body class="bg-dark text-gray-100 font-body min-h-screen">
 
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-dark/80 backdrop-blur-md border-b border-white/10">
     <div class="font-head font-800 text-xl flex items-center gap-2">
       <span class="w-3 h-3 bg-brand rounded-full animate-pulse"></span> Motiv
     </div>
-    <div class="flex bg-surface p-1 rounded-xl">
-      <button onclick="showPage('quotes')" id="tab-quotes" class="px-5 py-2 text-sm font-medium rounded-lg transition-all bg-brand text-white shadow-lg">Quotes</button>
-      <button onclick="showPage('dashboard')" id="tab-dashboard" class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
+    
+    <div class="flex items-center gap-4">
+      <div class="flex bg-surface p-1 rounded-xl">
+        <button onclick="showPage('quotes')" id="tab-quotes" class="px-5 py-2 text-sm font-medium rounded-lg transition-all bg-brand text-white shadow-lg">Quotes</button>
+        <button onclick="showPage('dashboard')" id="tab-dashboard" class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
+      </div>
+      
+      <button id="auth-btn" onclick="handleAuthClick()" class="hidden md:block bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
+        Sign In
+      </button>
     </div>
-    <div id="nav-date" class="hidden md:block text-sm font-bold text-solar tracking-wide uppercase"></div>
   </nav>
 
   <main class="p-4 max-w-2xl mx-auto">
     
     <div id="page-quotes" class="page block">
       <div id="quote-hero-card" class="relative rounded-[40px] overflow-hidden shadow-2xl bg-black" style="aspect-ratio: 9/16; width: 100%;">
-        
-        <img id="dynamic-bg" 
-             crossorigin="anonymous"
-             src="" 
-             class="absolute inset-0 w-full h-full object-cover bg-transition" 
-             alt="Daily Motivation">
-
+        <img id="dynamic-bg" crossorigin="anonymous" src="" class="absolute inset-0 w-full h-full object-cover bg-transition" alt="Daily Motivation">
         <div class="absolute inset-0" style="background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);"></div>
-
         <div class="absolute top-10 right-10 z-20">
           <span class="font-head text-[12px] tracking-[0.4em] uppercase text-white font-800 drop-shadow-md">Motiv</span>
         </div>
-
         <div class="absolute inset-0 z-10 flex flex-col items-center justify-center p-10 text-center">
-          
           <span class="font-head text-[10px] tracking-[0.3em] uppercase text-white/90 font-bold mb-6 text-shadow-sm">Daily Wisdom</span>
-
           <p id="hero-text" class="font-head italic text-white quote-shadow mb-6 leading-tight" style="font-size: clamp(26px, 7vw, 38px); font-weight: 700;"></p>
-          
           <div class="flex flex-col items-center mb-8">
             <p id="hero-author" class="font-body font-bold text-white text-shadow-sm mb-1 text-[18px]"></p>
             <p id="hero-year" class="font-body font-bold text-shadow-sm text-[13px] text-solar"></p>
           </div>
-
           <div id="hero-date" class="bg-solar text-black font-bold rounded-full px-5 h-8 text-[11px] flex items-center justify-center shadow-2xl leading-none"></div>
         </div>
-
         <div class="absolute bottom-10 left-0 right-0 z-20 px-10 flex gap-3" data-html2canvas-ignore="true">
           <button onclick="downloadQuoteImage()" id="save-btn" class="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-4 rounded-2xl font-bold transition-all text-[13px] backdrop-blur-md">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -109,7 +91,6 @@ async function login() {
         <h2 class="font-head text-4xl font-800 leading-tight">Keep<br>pushing, <span class="text-brand">champ.</span></h2>
         <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm">🔥 7 day streak</div>
       </div>
-
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div class="bg-brand p-6 rounded-3xl text-white shadow-xl">
           <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Goals Done</p>
@@ -124,7 +105,6 @@ async function login() {
           <p id="goals-pct" class="font-head text-4xl font-800 text-solar">0%</p>
         </div>
       </div>
-
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
             <h3 class="font-head text-[11px] mb-6 text-gray-500 uppercase tracking-widest">Weekly Activity</h3>
@@ -154,7 +134,12 @@ async function login() {
   </div>
 
   <script>
-    // --- DATABASE ---
+    // --- SUPABASE CONFIGURATION ---
+    const supabaseUrl = 'https://yokjotrfbnwauzzajfog.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // --- APP STATE & DATABASE ---
     const quotes = [
       { text: "The secret of getting ahead is getting started.", author: "- Mark Twain", year: "1890" },
       { text: "Believe you can and you're halfway there.", author: "- Theodore Roosevelt", year: "1910" },
@@ -178,10 +163,13 @@ async function login() {
       { name: 'Push-up Challenge', done: false, progress: 40 }
     ];
 
-    const today = new Date();
+    let currentUser = null;
 
-    // --- APP ENGINE ---
-    function init() {
+    // --- INITIALIZATION ---
+    async function init() {
+      await checkUser();
+      
+      const today = new Date();
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
       const q = quotes[dayOfYear % quotes.length];
       
@@ -196,6 +184,32 @@ async function login() {
       renderDashboard();
     }
 
+    // --- AUTH FUNCTIONS ---
+    async function handleAuthClick() {
+      if (currentUser) {
+        await supabase.auth.signOut();
+        location.reload();
+      } else {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin }
+        });
+        if (error) alert("Error: " + error.message);
+      }
+    }
+
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUser = user;
+      const btn = document.getElementById('auth-btn');
+      if (user) {
+        btn.innerText = "Logout (" + user.email.split('@')[0] + ")";
+      } else {
+        btn.innerText = "Sign In";
+      }
+    }
+
+    // --- CORE LOGIC ---
     function refreshBackground() {
       const randomImg = bgImages[Math.floor(Math.random() * bgImages.length)];
       document.getElementById('dynamic-bg').src = randomImg + `&sig=${Math.random()}`;
@@ -210,7 +224,6 @@ async function login() {
       document.getElementById('tab-dashboard').className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
     }
 
-    // --- DASHBOARD LOGIC ---
     function renderDashboard() {
       document.getElementById('goal-items').innerHTML = goals.map((g, i) => `
         <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
@@ -243,25 +256,18 @@ async function login() {
       if(val) { goals.push({name: val, done: false, progress: 0}); renderDashboard(); closeModal(); document.getElementById('goal-input').value = ''; }
     }
 
-    // --- EXPORT LOGIC ---
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
       const btn = document.getElementById('save-btn');
       const originalHTML = btn.innerHTML;
-
       btn.disabled = true;
       btn.innerHTML = `<span>Processing...</span>`;
-
       try {
         const canvas = await html2canvas(card, {
-          useCORS: true, 
-          scale: 3, 
-          backgroundColor: '#000000',
-          logging: false
+          useCORS: true, scale: 3, backgroundColor: '#000000', logging: false
         });
-
         const link = document.createElement('a');
-        link.download = `motiv-${today.toISOString().slice(0,10)}.jpg`;
+        link.download = `motiv-${new Date().toISOString().slice(0,10)}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.click();
         btn.innerHTML = `<span>Ready!</span>`;
