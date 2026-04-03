@@ -14,16 +14,8 @@
     tailwind.config = {
       theme: {
         extend: {
-          colors: {
-            brand: '#FF5C00',
-            solar: '#FFD600',
-            dark: '#0E0E0E',
-            surface: '#1A1A1A',
-          },
-          fontFamily: {
-            head: ['Syne', 'sans-serif'],
-            body: ['DM Sans', 'sans-serif'],
-          }
+          colors: { brand: '#FF5C00', solar: '#FFD600', dark: '#0E0E0E', surface: '#1A1A1A' },
+          fontFamily: { head: ['Syne', 'sans-serif'], body: ['DM Sans', 'sans-serif'] }
         }
       }
     }
@@ -50,14 +42,13 @@
         <button onclick="showPage('dashboard')" id="tab-dashboard" class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
       </div>
       
-      <button id="auth-btn" onclick="handleAuthClick()" class="hidden md:block bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
+      <button id="auth-btn" onclick="handleAuthClick()" class="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
         Sign In
       </button>
     </div>
   </nav>
 
   <main class="p-4 max-w-2xl mx-auto">
-    
     <div id="page-quotes" class="page block">
       <div id="quote-hero-card" class="relative rounded-[40px] overflow-hidden shadow-2xl bg-black" style="aspect-ratio: 9/16; width: 100%;">
         <img id="dynamic-bg" crossorigin="anonymous" src="" class="absolute inset-0 w-full h-full object-cover bg-transition" alt="Daily Motivation">
@@ -134,12 +125,13 @@
   </div>
 
   <script>
-    // --- SUPABASE CONFIGURATION ---
+    // --- SUPABASE CONFIG ---
     const supabaseUrl = 'https://yokjotrfbnwauzzajfog.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // RENAMED TO supabaseClient to avoid SyntaxError
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- APP STATE & DATABASE ---
     const quotes = [
       { text: "The secret of getting ahead is getting started.", author: "- Mark Twain", year: "1890" },
       { text: "Believe you can and you're halfway there.", author: "- Theodore Roosevelt", year: "1910" },
@@ -165,10 +157,7 @@
 
     let currentUser = null;
 
-    // --- INITIALIZATION ---
     async function init() {
-      await checkUser();
-      
       const today = new Date();
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
       const q = quotes[dayOfYear % quotes.length];
@@ -176,21 +165,21 @@
       document.getElementById('hero-text').textContent = `“${q.text}”`;
       document.getElementById('hero-author').textContent = q.author;
       document.getElementById('hero-year').textContent = q.year;
-
       document.getElementById('nav-date').textContent = today.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
       document.getElementById('hero-date').textContent = today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
 
       refreshBackground();
       renderDashboard();
+      
+      try { await checkUser(); } catch (e) { console.error("Auth init failed"); }
     }
 
-    // --- AUTH FUNCTIONS ---
     async function handleAuthClick() {
       if (currentUser) {
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         location.reload();
       } else {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: { redirectTo: window.location.origin }
         });
@@ -199,17 +188,16 @@
     }
 
     async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       currentUser = user;
       const btn = document.getElementById('auth-btn');
-      if (user) {
+      if (user && btn) {
         btn.innerText = "Logout (" + user.email.split('@')[0] + ")";
-      } else {
+      } else if (btn) {
         btn.innerText = "Sign In";
       }
     }
 
-    // --- CORE LOGIC ---
     function refreshBackground() {
       const randomImg = bgImages[Math.floor(Math.random() * bgImages.length)];
       document.getElementById('dynamic-bg').src = randomImg + `&sig=${Math.random()}`;
@@ -218,7 +206,6 @@
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
       document.getElementById(`page-${id}`).classList.remove('hidden');
-      
       const isQ = id === 'quotes';
       document.getElementById('tab-quotes').className = isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
       document.getElementById('tab-dashboard').className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
@@ -237,12 +224,10 @@
             </div>
           </div>
         </div>`).join('');
-
       const doneCount = goals.filter(g => g.done).length;
       document.getElementById('goals-done').textContent = doneCount;
       document.getElementById('goals-active').textContent = goals.length - doneCount;
       document.getElementById('goals-pct').textContent = goals.length ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
-
       const bars = [40, 70, 45, 90, 65, 80, 20];
       document.getElementById('bar-chart').innerHTML = bars.map(h => `<div class="flex-1 bg-white/5 rounded-t-lg relative h-full"><div class="absolute bottom-0 w-full bg-solar rounded-t-sm" style="height:${h}%"></div></div>`).join('');
       document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
@@ -263,20 +248,14 @@
       btn.disabled = true;
       btn.innerHTML = `<span>Processing...</span>`;
       try {
-        const canvas = await html2canvas(card, {
-          useCORS: true, scale: 3, backgroundColor: '#000000', logging: false
-        });
+        const canvas = await html2canvas(card, { useCORS: true, scale: 3, backgroundColor: '#000000', logging: false });
         const link = document.createElement('a');
         link.download = `motiv-${new Date().toISOString().slice(0,10)}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.click();
         btn.innerHTML = `<span>Ready!</span>`;
-      } catch (e) {
-        console.error("Export failed:", e);
-        btn.innerHTML = `<span>Error</span>`;
-      } finally {
-        setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
-      }
+      } catch (e) { console.error("Export failed:", e); btn.innerHTML = `<span>Error</span>`; }
+      finally { setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000); }
     }
 
     window.onload = init;
