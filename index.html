@@ -1,146 +1,560 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://*.supabase.co;">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
-  
+
+  <meta http-equiv="Content-Security-Policy"
+    content="
+      default-src 'self';
+      script-src  'self' 'unsafe-inline' 'unsafe-eval'
+                  https://cdn.jsdelivr.net
+                  https://cdn.tailwindcss.com
+                  https://cdnjs.cloudflare.com
+                  https://*.supabase.co;
+      style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src    https://fonts.gstatic.com;
+      img-src     'self' data: blob: https://images.unsplash.com https://*.supabase.co;
+      connect-src 'self' https://*.supabase.co;
+    ">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: { brand: '#FF5C00', solar: '#FFD600', dark: '#0E0E0E', surface: '#1A1A1A' },
-          fontFamily: { head: ['Syne', 'sans-serif'], body: ['DM Sans', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+
   <style>
-    .quote-shadow { text-shadow: 0 4px 24px rgba(0,0,0,0.8); }
-    .text-shadow-sm { text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
-    #quote-hero-card { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    .bg-transition { transition: opacity 0.6s ease-in-out; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:   #FF5C00;
+      --solar:   #FFD600;
+      --dark:    #0E0E0E;
+      --surface: #1A1A1A;
+      --text:    #f3f4f6;
+      --muted:   #9ca3af;
+      --border:  rgba(255,255,255,0.08);
+    }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: rgba(14,14,14,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.2rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .pulse-dot {
+      width: 10px; height: 10px;
+      background: var(--brand); border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.5; transform:scale(1.3); }
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+
+    .tab-group {
+      display: flex; background: var(--surface);
+      padding: 4px; border-radius: 14px; gap: 2px;
+    }
+    .tab-btn {
+      padding: 8px 20px; font-size: 0.85rem; font-weight: 600;
+      border-radius: 10px; border: none; cursor: pointer;
+      transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+      background: transparent; color: var(--muted);
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active {
+      background: var(--brand); color: #fff;
+      box-shadow: 0 4px 14px rgba(255,92,0,0.4);
+    }
+
+    .auth-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text); padding: 8px 16px;
+      border-radius: 12px; font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .auth-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── MAIN ── */
+    main { padding: 1rem; max-width: 680px; margin: 0 auto; }
+
+    /* ── PAGE VISIBILITY ── */
+    .page        { display: none; }
+    .page.active { display: block; }
+
+    /* ── QUOTE CARD ── */
+    #quote-hero-card {
+      position: relative; border-radius: 36px;
+      overflow: hidden; background: #000;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      aspect-ratio: 9 / 16; width: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #dynamic-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover;
+      transition: opacity 0.6s ease;
+    }
+
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(circle,
+        rgba(0,0,0,0.1) 0%,
+        rgba(0,0,0,0.4) 50%,
+        rgba(0,0,0,0.82) 100%);
+    }
+
+    .card-brand-tag {
+      position: absolute; top: 2rem; right: 2rem; z-index: 20;
+      font-family: 'Syne', sans-serif; font-size: 11px;
+      letter-spacing: 0.35em; text-transform: uppercase;
+      color: #fff; font-weight: 800;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .card-content {
+      position: absolute; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2.5rem; text-align: center;
+    }
+
+    .card-eyebrow {
+      font-family: 'Syne', sans-serif; font-size: 10px;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(255,255,255,0.85); font-weight: 700;
+      margin-bottom: 1.4rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    }
+
+    #hero-text {
+      font-family: 'Syne', sans-serif; font-style: italic;
+      color: #fff; line-height: 1.25; font-weight: 700;
+      font-size: clamp(22px, 6.5vw, 36px);
+      text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-author-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; margin-bottom: 2rem;
+    }
+
+    #hero-author {
+      font-weight: 700; color: #fff; font-size: 17px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+      margin-bottom: 4px;
+    }
+
+    #hero-year {
+      font-weight: 700; color: var(--solar); font-size: 13px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    }
+
+    #hero-date {
+      background: var(--solar); color: #000; font-weight: 700;
+      border-radius: 999px; padding: 0 1.2rem; height: 32px;
+      font-size: 11px; display: inline-flex;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .card-actions {
+      position: absolute; bottom: 2rem; left: 0; right: 0;
+      z-index: 20; padding: 0 2rem;
+      display: flex; gap: 0.75rem;
+    }
+
+    .btn-save {
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 14px 0; border-radius: 18px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      backdrop-filter: blur(8px); transition: background 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-save:hover  { background: rgba(255,255,255,0.2); }
+    .btn-save:disabled { opacity: 0.6; cursor: default; }
+
+    .btn-refresh {
+      padding: 14px; border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; cursor: pointer;
+      backdrop-filter: blur(8px); transition: background 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-refresh:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── DASHBOARD ── */
+    #page-dashboard { padding-top: 1.5rem; }
+
+    .dash-header {
+      display: flex; flex-wrap: wrap;
+      justify-content: space-between; align-items: flex-end;
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+
+    .dash-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem; font-weight: 800; line-height: 1.1;
+    }
+    .dash-title .accent { color: var(--brand); }
+
+    .streak-badge {
+      background: rgba(255,214,0,0.1);
+      border: 1px solid rgba(255,214,0,0.25);
+      color: var(--solar); font-weight: 700;
+      font-size: 0.85rem; padding: 6px 16px;
+      border-radius: 999px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    @media (min-width: 540px) {
+      .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .stat-wide  { grid-column: auto; }
+    }
+
+    .stat-card {
+      padding: 1.5rem; border-radius: 24px;
+    }
+    .stat-card.orange {
+      background: var(--brand); color: #fff;
+      box-shadow: 0 8px 24px rgba(255,92,0,0.35);
+    }
+    .stat-card.dark {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat-wide { grid-column: span 2; }
+    @media (min-width: 540px) { .stat-wide { grid-column: span 1; } }
+
+    .stat-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.12em; font-weight: 700;
+      margin-bottom: 0.5rem; color: var(--muted);
+    }
+    .stat-card.orange .stat-label { color: rgba(255,255,255,0.75); }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem; font-weight: 800; line-height: 1;
+      color: var(--text);
+    }
+    .stat-value.yellow { color: var(--solar); }
+
+    .panels-grid { display: grid; gap: 1.5rem; }
+    @media (min-width: 540px) { .panels-grid { grid-template-columns: 1fr 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px; padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .panel-title {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.12em; color: #6b7280;
+      font-weight: 700; margin-bottom: 1.5rem;
+    }
+
+    #bar-chart {
+      display: flex; align-items: flex-end;
+      gap: 0.5rem; height: 8rem; margin-bottom: 1rem;
+    }
+
+    .bar-col {
+      flex: 1; background: rgba(255,255,255,0.05);
+      border-radius: 6px 6px 0 0;
+      position: relative; height: 100%;
+    }
+
+    .bar-fill {
+      position: absolute; bottom: 0; width: 100%;
+      background: var(--solar); border-radius: 4px 4px 0 0;
+    }
+
+    #bar-days { display: flex; justify-content: space-between; padding: 0 2px; }
+
+    .bar-day {
+      font-size: 10px; font-weight: 700;
+      color: #6b7280; flex: 1; text-align: center;
+    }
+
+    .goal-item {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--dark); padding: 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .goal-item:hover { border-color: rgba(255,255,255,0.1); }
+
+    .goal-check {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .goal-check.checked { background: var(--brand); border-color: var(--brand); }
+
+    .goal-info { flex: 1; min-width: 0; }
+
+    .goal-name {
+      font-size: 0.875rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; margin-bottom: 6px; color: var(--text);
+    }
+    .goal-name.done { text-decoration: line-through; color: #6b7280; }
+
+    .progress-track {
+      width: 100%; background: rgba(255,255,255,0.08);
+      height: 4px; border-radius: 999px; overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%; background: var(--brand);
+      border-radius: 999px; transition: width 0.4s ease;
+    }
+
+    .btn-add {
+      width: 100%; padding: 14px;
+      border: 2px dashed rgba(255,255,255,0.1);
+      border-radius: 16px; color: #6b7280;
+      font-weight: 700; background: rgba(255,255,255,0.03);
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    }
+    .btn-add:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* ── MODAL ── */
+    #modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      z-index: 100; display: none;
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    #modal.open { display: flex; }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      width: 100%; max-width: 360px;
+      border-radius: 28px; padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem; color: #fff; margin-bottom: 1.5rem;
+    }
+
+    .modal-input {
+      width: 100%; background: var(--dark);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 14px;
+      margin-bottom: 1.5rem; outline: none;
+      color: #fff; font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--brand); }
+
+    .modal-actions { display: flex; gap: 0.75rem; }
+
+    .btn-cancel {
+      flex: 1; padding: 12px; background: transparent;
+      color: var(--muted); font-weight: 600; cursor: pointer;
+      border: none; font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; transition: color 0.2s; border-radius: 12px;
+    }
+    .btn-cancel:hover { color: #fff; }
+
+    .btn-confirm {
+      flex: 1; padding: 12px; background: var(--brand);
+      color: #fff; font-weight: 700; cursor: pointer;
+      border: none; border-radius: 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+      box-shadow: 0 4px 14px rgba(255,92,0,0.4);
+      transition: opacity 0.2s;
+    }
+    .btn-confirm:hover { opacity: 0.85; }
   </style>
 </head>
 
-<body class="bg-dark text-gray-100 font-body min-h-screen">
+<body>
 
-  <nav class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-dark/80 backdrop-blur-md border-b border-white/10">
-    <div class="font-head font-800 text-xl flex items-center gap-2">
-      <span class="w-3 h-3 bg-brand rounded-full animate-pulse"></span> Motiv
+  <nav>
+    <div class="nav-logo">
+      <div class="pulse-dot"></div>
+      Motiv
     </div>
-    
-    <div class="flex items-center gap-4">
-      <div class="flex bg-surface p-1 rounded-xl">
-        <button onclick="showPage('quotes')" id="tab-quotes" class="px-5 py-2 text-sm font-medium rounded-lg transition-all bg-brand text-white shadow-lg">Quotes</button>
-        <button onclick="showPage('dashboard')" id="tab-dashboard" class="px-5 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-white">Dashboard</button>
+    <div class="nav-right">
+      <div class="tab-group">
+        <button onclick="showPage('quotes')"    id="tab-quotes"    class="tab-btn active">Quotes</button>
+        <button onclick="showPage('dashboard')" id="tab-dashboard" class="tab-btn">Dashboard</button>
       </div>
-      
-      <button id="auth-btn" onclick="handleAuthClick()" class="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/10 transition-all">
-        Sign In
-      </button>
+      <button id="auth-btn" onclick="handleAuthClick()" class="auth-btn">Sign In</button>
     </div>
   </nav>
 
-  <main class="p-4 max-w-2xl mx-auto">
-    <div id="page-quotes" class="page block">
-      <div id="quote-hero-card" class="relative rounded-[40px] overflow-hidden shadow-2xl bg-black" style="aspect-ratio: 9/16; width: 100%;">
-        <img id="dynamic-bg" crossorigin="anonymous" src="" class="absolute inset-0 w-full h-full object-cover bg-transition" alt="Daily Motivation">
-        <div class="absolute inset-0" style="background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);"></div>
-        <div class="absolute top-10 right-10 z-20">
-          <span class="font-head text-[12px] tracking-[0.4em] uppercase text-white font-800 drop-shadow-md">Motiv</span>
-        </div>
-        <div class="absolute inset-0 z-10 flex flex-col items-center justify-center p-10 text-center">
-          <span class="font-head text-[10px] tracking-[0.3em] uppercase text-white/90 font-bold mb-6 text-shadow-sm">Daily Wisdom</span>
-          <p id="hero-text" class="font-head italic text-white quote-shadow mb-6 leading-tight" style="font-size: clamp(26px, 7vw, 38px); font-weight: 700;"></p>
-          <div class="flex flex-col items-center mb-8">
-            <p id="hero-author" class="font-body font-bold text-white text-shadow-sm mb-1 text-[18px]"></p>
-            <p id="hero-year" class="font-body font-bold text-shadow-sm text-[13px] text-solar"></p>
+  <main>
+
+    <!-- QUOTES -->
+    <div id="page-quotes" class="page active">
+      <div id="quote-hero-card">
+        <img id="dynamic-bg" crossorigin="anonymous" src="" alt="Daily Motivation">
+        <div class="card-overlay"></div>
+        <div class="card-brand-tag">Motiv</div>
+        <div class="card-content">
+          <span class="card-eyebrow">Daily Wisdom</span>
+          <p id="hero-text"></p>
+          <div class="card-author-wrap">
+            <p id="hero-author"></p>
+            <p id="hero-year"></p>
           </div>
-          <div id="hero-date" class="bg-solar text-black font-bold rounded-full px-5 h-8 text-[11px] flex items-center justify-center shadow-2xl leading-none"></div>
+          <div id="hero-date"></div>
         </div>
-        <div class="absolute bottom-10 left-0 right-0 z-20 px-10 flex gap-3" data-html2canvas-ignore="true">
-          <button onclick="downloadQuoteImage()" id="save-btn" class="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-4 rounded-2xl font-bold transition-all text-[13px] backdrop-blur-md">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            <span>Save Quote</span>
+        <div class="card-actions" data-html2canvas-ignore="true">
+          <button onclick="downloadQuoteImage()" id="save-btn" class="btn-save">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Save Quote
           </button>
-          <button onclick="refreshBackground()" class="p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all backdrop-blur-md">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <button onclick="refreshBackground()" class="btn-refresh">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
           </button>
         </div>
       </div>
     </div>
 
-    <div id="page-dashboard" class="page hidden space-y-6 pt-4">
-      <div class="flex flex-wrap justify-between items-end gap-4">
-        <h2 class="font-head text-4xl font-800 leading-tight">Keep<br>pushing, <span class="text-brand">champ.</span></h2>
-        <div class="bg-solar/10 border border-solar/20 px-4 py-2 rounded-full text-solar font-bold text-sm">🔥 7 day streak</div>
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page">
+      <div class="dash-header">
+        <h2 class="dash-title">Keep<br>pushing, <span class="accent">champ.</span></h2>
+        <div class="streak-badge">🔥 7 day streak</div>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div class="bg-brand p-6 rounded-3xl text-white shadow-xl">
-          <p class="text-[10px] uppercase tracking-widest opacity-80 mb-2 font-bold">Goals Done</p>
-          <p id="goals-done" class="font-head text-4xl font-800">0</p>
+
+      <div class="stats-grid">
+        <div class="stat-card orange">
+          <div class="stat-label">Goals Done</div>
+          <div id="goals-done" class="stat-value">0</div>
         </div>
-        <div class="bg-surface p-6 rounded-3xl border border-white/5">
-          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Active</p>
-          <p id="goals-active" class="font-head text-4xl font-800 text-white">0</p>
+        <div class="stat-card dark">
+          <div class="stat-label">Active</div>
+          <div id="goals-active" class="stat-value">0</div>
         </div>
-        <div class="bg-surface p-6 rounded-3xl border border-white/5 col-span-2 md:col-span-1">
-          <p class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Completion</p>
-          <p id="goals-pct" class="font-head text-4xl font-800 text-solar">0%</p>
+        <div class="stat-card dark stat-wide">
+          <div class="stat-label">Completion</div>
+          <div id="goals-pct" class="stat-value yellow">0%</div>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
-            <h3 class="font-head text-[11px] mb-6 text-gray-500 uppercase tracking-widest">Weekly Activity</h3>
-            <div id="bar-chart" class="flex items-end gap-3 h-32 mb-4"></div>
-            <div id="bar-days" class="flex justify-between px-1"></div>
+
+      <div class="panels-grid">
+        <div class="panel">
+          <div class="panel-title">Weekly Activity</div>
+          <div id="bar-chart"></div>
+          <div id="bar-days"></div>
         </div>
-        <div class="bg-surface p-6 rounded-3xl border border-white/5 shadow-lg">
-          <h3 class="font-head text-[11px] mb-6 text-gray-500 uppercase tracking-widest">Today's Tasks</h3>
-          <div id="goal-items" class="space-y-4 mb-6"></div>
-          <button onclick="openModal()" class="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 hover:border-brand hover:text-brand transition-all font-bold bg-white/5">
-            + Add new goal
-          </button>
+        <div class="panel">
+          <div class="panel-title">Today's Tasks</div>
+          <div id="goal-items"></div>
+          <button onclick="openModal()" class="btn-add">+ Add new goal</button>
         </div>
       </div>
     </div>
+
   </main>
 
-  <div id="modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-    <div class="bg-surface border border-white/10 w-full max-w-sm rounded-[32px] p-8 shadow-2xl">
-      <h3 class="font-head text-xl mb-6 text-white">New Goal</h3>
-      <input type="text" id="goal-input" placeholder="What are we crushing?" class="w-full bg-dark border border-white/10 rounded-xl p-4 mb-6 outline-none focus:border-brand text-white transition-colors">
-      <div class="flex gap-3">
-        <button onclick="closeModal()" class="flex-1 py-3 text-gray-400 font-medium hover:text-white transition-colors">Cancel</button>
-        <button onclick="addGoal()" class="flex-1 bg-brand py-3 rounded-xl font-bold text-white shadow-lg">Add Goal</button>
+  <!-- MODAL -->
+  <div id="modal">
+    <div class="modal-box">
+      <div class="modal-title">New Goal</div>
+      <input type="text" id="goal-input" placeholder="What are we crushing?" class="modal-input">
+      <div class="modal-actions">
+        <button onclick="closeModal()" class="btn-cancel">Cancel</button>
+        <button onclick="addGoal()"    class="btn-confirm">Add Goal</button>
       </div>
     </div>
   </div>
 
   <script>
-    // --- SUPABASE CONFIG ---
-    const supabaseUrl = 'https://yokjotrfbnwauzzajfog.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA';
-    
-    // Initialized as supabaseClient to prevent "already declared" SyntaxError
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    // ── SUPABASE ──────────────────────────────────────────────
+    // ⚠️  Paste your real anon key from:
+    //     supabase.com/dashboard → project → Settings → API
+    const SUPABASE_URL  = 'https://yokjotrfbnwauzzajfog.supabase.co';
+    const SUPABASE_ANON = 'PASTE_YOUR_REAL_ANON_KEY_HERE';
 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    let currentUser = null;
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      currentUser = session?.user ?? null;
+      const btn = document.getElementById('auth-btn');
+      btn.textContent = currentUser
+        ? 'Logout (' + currentUser.email.split('@')[0] + ')'
+        : 'Sign In';
+    });
+
+    async function handleAuthClick() {
+      if (currentUser) {
+        await supabaseClient.auth.signOut();
+      } else {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.href }
+        });
+        if (error) alert('Sign-in failed: ' + error.message);
+      }
+    }
+
+    // ── DATA ──────────────────────────────────────────────────
     const quotes = [
-      { text: "The secret of getting ahead is getting started.", author: "- Mark Twain", year: "1890" },
-      { text: "Believe you can and you're halfway there.", author: "- Theodore Roosevelt", year: "1910" },
-      { text: "Success is not final; failure is not fatal.", author: "- Winston Churchill", year: "1941" },
-      { text: "Dream big and dare to fail.", author: "- Norman Vaughan", year: "1994" },
-      { text: "Stay hungry, stay foolish.", author: "- Steve Jobs", year: "2005" },
-      { text: "It always seems impossible until it's done.", author: "- Nelson Mandela", year: "2001" },
-      { text: "Discipline is the bridge between goals and accomplishment.", author: "- Jim Rohn", year: "1980" }
+      { text: "The secret of getting ahead is getting started.",            author: "— Mark Twain",        year: "1890" },
+      { text: "Believe you can and you're halfway there.",                  author: "— Theodore Roosevelt", year: "1910" },
+      { text: "Success is not final; failure is not fatal.",                author: "— Winston Churchill",  year: "1941" },
+      { text: "Dream big and dare to fail.",                                author: "— Norman Vaughan",     year: "1994" },
+      { text: "Stay hungry, stay foolish.",                                 author: "— Steve Jobs",         year: "2005" },
+      { text: "It always seems impossible until it's done.",                author: "— Nelson Mandela",     year: "2001" },
+      { text: "Discipline is the bridge between goals and accomplishment.", author: "— Jim Rohn",           year: "1980" }
     ];
 
     const bgImages = [
@@ -152,135 +566,97 @@
     ];
 
     let goals = [
-      { name: 'Morning Meditation', done: true, progress: 100 },
-      { name: 'Push-up Challenge', done: false, progress: 40 }
+      { name: 'Morning Meditation', done: true,  progress: 100 },
+      { name: 'Push-up Challenge',  done: false, progress: 40  }
     ];
 
-    let currentUser = null;
-
-    async function init() {
-      const today = new Date();
+    // ── INIT ──────────────────────────────────────────────────
+    function init() {
+      const today     = new Date();
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-      const q = quotes[dayOfYear % quotes.length];
-      
-      const heroText = document.getElementById('hero-text');
-      const heroAuthor = document.getElementById('hero-author');
-      const heroYear = document.getElementById('hero-year');
-      const heroDate = document.getElementById('hero-date');
+      const q         = quotes[dayOfYear % quotes.length];
 
-      if(heroText) heroText.textContent = `“${q.text}”`;
-      if(heroAuthor) heroAuthor.textContent = q.author;
-      if(heroYear) heroYear.textContent = q.year;
-      if(heroDate) heroDate.textContent = today.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+      document.getElementById('hero-text').textContent   = '"' + q.text + '"';
+      document.getElementById('hero-author').textContent = q.author;
+      document.getElementById('hero-year').textContent   = q.year;
+      document.getElementById('hero-date').textContent   = today.toLocaleDateString('en-US',
+        { day: 'numeric', month: 'long', year: 'numeric' });
 
       refreshBackground();
       renderDashboard();
-      
-      try { await checkUser(); } catch (e) { console.error("Auth init failed"); }
     }
 
-    async function handleAuthClick() {
-      if (currentUser) {
-        await supabaseClient.auth.signOut();
-        location.reload();
-      } else {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin }
-        });
-        if (error) alert("Error: " + error.message);
-      }
-    }
-
-    async function checkUser() {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      currentUser = user;
-      const btn = document.getElementById('auth-btn');
-      if (user && btn) {
-        btn.innerText = "Logout (" + user.email.split('@')[0] + ")";
-      } else if (btn) {
-        btn.innerText = "Sign In";
-      }
-    }
-
-    function refreshBackground() {
-      const randomImg = bgImages[Math.floor(Math.random() * bgImages.length)];
-      const bgImg = document.getElementById('dynamic-bg');
-      if(bgImg) bgImg.src = randomImg + `&sig=${Math.random()}`;
-    }
-
+    // ── NAV ───────────────────────────────────────────────────
     function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      const target = document.getElementById(`page-${id}`);
-      if(target) target.classList.remove('hidden');
-
-      const isQ = id === 'quotes';
-      const tabQ = document.getElementById('tab-quotes');
-      const tabD = document.getElementById('tab-dashboard');
-
-      if(tabQ) tabQ.className = isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
-      if(tabD) tabD.className = !isQ ? 'px-5 py-2 text-sm font-medium rounded-lg bg-brand text-white shadow-lg transition-all' : 'px-5 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all';
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      document.getElementById('tab-quotes').classList.toggle('active',    id === 'quotes');
+      document.getElementById('tab-dashboard').classList.toggle('active', id === 'dashboard');
     }
 
+    // ── BACKGROUND ────────────────────────────────────────────
+    function refreshBackground() {
+      const img = document.getElementById('dynamic-bg');
+      img.src = bgImages[Math.floor(Math.random() * bgImages.length)] + '&sig=' + Math.random();
+    }
+
+    // ── DASHBOARD ─────────────────────────────────────────────
     function renderDashboard() {
       const goalList = document.getElementById('goal-items');
-      if(!goalList) return;
-
       goalList.innerHTML = goals.map((g, i) => `
-        <div class="flex items-center gap-4 bg-dark p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
-          <div onclick="toggleGoal(${i})" class="w-6 h-6 rounded-full border-2 cursor-pointer flex items-center justify-center flex-shrink-0 ${g.done ? 'bg-brand border-brand' : 'border-white/20'}">
-            ${g.done ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+        <div class="goal-item">
+          <div class="goal-check ${g.done ? 'checked' : ''}" onclick="toggleGoal(${i})">
+            ${g.done
+              ? '<svg width="12" height="12" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'
+              : ''}
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold truncate ${g.done ? 'line-through text-gray-500' : 'text-gray-100'}">${g.name}</p>
-            <div class="w-full bg-white/10 h-1 rounded-full mt-2 overflow-hidden">
-              <div class="bg-brand h-full rounded-full transition-all duration-500" style="width:${g.done ? 100 : g.progress}%"></div>
+          <div class="goal-info">
+            <div class="goal-name ${g.done ? 'done' : ''}">${g.name}</div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${g.done ? 100 : g.progress}%"></div>
             </div>
           </div>
         </div>`).join('');
 
       const doneCount = goals.filter(g => g.done).length;
-      const gDone = document.getElementById('goals-done');
-      const gActive = document.getElementById('goals-active');
-      const gPct = document.getElementById('goals-pct');
+      document.getElementById('goals-done').textContent   = doneCount;
+      document.getElementById('goals-active').textContent = goals.length - doneCount;
+      document.getElementById('goals-pct').textContent    = goals.length
+        ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
 
-      if(gDone) gDone.textContent = doneCount;
-      if(gActive) gActive.textContent = goals.length - doneCount;
-      if(gPct) gPct.textContent = goals.length ? Math.round((doneCount / goals.length) * 100) + '%' : '0%';
-      
       const bars = [40, 70, 45, 90, 65, 80, 20];
-      const barChart = document.getElementById('bar-chart');
-      const barDays = document.getElementById('bar-days');
-
-      if(barChart) barChart.innerHTML = bars.map(h => `<div class="flex-1 bg-white/5 rounded-t-lg relative h-full"><div class="absolute bottom-0 w-full bg-solar rounded-t-sm" style="height:${h}%"></div></div>`).join('');
-      if(barDays) barDays.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<span class="text-[10px] font-bold text-gray-500 w-full text-center">${d}</span>`).join('');
+      document.getElementById('bar-chart').innerHTML = bars.map(h =>
+        `<div class="bar-col"><div class="bar-fill" style="height:${h}%"></div></div>`).join('');
+      document.getElementById('bar-days').innerHTML = ['M','T','W','T','F','S','S'].map(d =>
+        `<span class="bar-day">${d}</span>`).join('');
     }
 
-    function toggleGoal(i) { goals[i].done = !goals[i].done; renderDashboard(); }
-    function openModal() { document.getElementById('modal').classList.replace('hidden', 'flex'); document.getElementById('goal-input').focus(); }
-    function closeModal() { document.getElementById('modal').classList.replace('flex', 'hidden'); }
+    function toggleGoal(i)  { goals[i].done = !goals[i].done; renderDashboard(); }
+    function openModal()     { document.getElementById('modal').classList.add('open'); document.getElementById('goal-input').focus(); }
+    function closeModal()    { document.getElementById('modal').classList.remove('open'); }
     function addGoal() {
       const val = document.getElementById('goal-input').value.trim();
-      if(val) { goals.push({name: val, done: false, progress: 0}); renderDashboard(); closeModal(); document.getElementById('goal-input').value = ''; }
+      if (val) { goals.push({ name: val, done: false, progress: 0 }); renderDashboard(); closeModal(); document.getElementById('goal-input').value = ''; }
     }
 
+    // ── DOWNLOAD ──────────────────────────────────────────────
     async function downloadQuoteImage() {
       const card = document.getElementById('quote-hero-card');
-      const btn = document.getElementById('save-btn');
-      if(!card || !btn) return;
-
-      const originalHTML = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = `<span>Processing...</span>`;
+      const btn  = document.getElementById('save-btn');
+      const orig = btn.innerHTML;
+      btn.disabled = true; btn.textContent = 'Processing…';
       try {
-        const canvas = await html2canvas(card, { useCORS: true, scale: 3, backgroundColor: '#000000', logging: false });
-        const link = document.createElement('a');
-        link.download = `motiv-${new Date().toISOString().slice(0,10)}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        link.click();
-        btn.innerHTML = `<span>Ready!</span>`;
-      } catch (e) { console.error("Export failed:", e); btn.innerHTML = `<span>Error</span>`; }
-      finally { setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000); }
+        const canvas = await html2canvas(card, { useCORS: true, scale: 3, backgroundColor: '#000', logging: false });
+        const a = document.createElement('a');
+        a.download = 'motiv-' + new Date().toISOString().slice(0,10) + '.jpg';
+        a.href = canvas.toDataURL('image/jpeg', 0.95);
+        a.click();
+        btn.textContent = '✓ Saved!';
+      } catch(e) {
+        btn.textContent = 'Error — try again';
+      } finally {
+        setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+      }
     }
 
     window.onload = init;
