@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
@@ -36,6 +37,18 @@
   </style>
 </head>
 <body class="bg-dark text-gray-100 font-body min-h-screen">
+  const supabaseUrl = https://yokjotrfbnwauzzajfog.supabase.co;
+const supabaseKey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlva2pvdHJmYm53YXV6emFqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTEzODMsImV4cCI6MjA5MDc4NzM4M30.youFlUsh3d2TvYZmhoLJqzClHZsH_Mr_-cnM4va2vnA;
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function login() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin // This sends them back to your homepage
+    }
+  });
+}
 
   <nav class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-dark/80 backdrop-blur-md border-b border-white/10">
     <div class="font-head font-800 text-xl flex items-center gap-2">
