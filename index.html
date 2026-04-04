@@ -323,12 +323,33 @@
     }
     .dash-title .accent { color: var(--brand); }
 
+    .streak-right {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 0.5rem;
+    }
+
     .streak-badge {
       background: rgba(255,214,0,0.1);
       border: 1px solid rgba(255,214,0,0.25);
       color: var(--solar); font-weight: 700;
       font-size: 0.85rem; padding: 6px 16px;
       border-radius: 999px;
+    }
+
+    .claim-btn {
+      background: var(--brand); color: #fff;
+      border: none; border-radius: 12px;
+      padding: 8px 18px; font-size: 0.8rem;
+      font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      box-shadow: 0 4px 14px rgba(255,92,0,0.4);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .claim-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+    .claim-btn:disabled {
+      background: rgba(255,255,255,0.08);
+      color: var(--muted); box-shadow: none;
+      cursor: default; transform: none; opacity: 1;
     }
 
     .stats-grid {
@@ -590,7 +611,7 @@
     <div id="page-dashboard" class="page">
       <div class="dash-header">
         <h2 class="dash-title" id="dash-greeting">Keep<br>pushing, <span class="accent">champ.</span></h2>
-        <div class="streak-badge">🔥 7 day streak</div>
+        <div class="streak-right"><div class="streak-badge" id="streak-badge">🔥 0 day streak</div><button onclick="claimStreak()" id="claim-btn" class="claim-btn">⚡ Claim Today</button></div>
       </div>
 
       <div class="stats-grid">
@@ -664,6 +685,78 @@
     // ── CLERK AUTH ────────────────────────────────────────────
     // ✅ Clerk loads asynchronously via the script tag above.
     // We wait for window.__clerk_loaded or the 'clerk:loaded' event.
+
+    // ── STREAK LOGIC ──────────────────────────────────────────
+    function getStreakData() {
+      const raw = localStorage.getItem('motiv_streak');
+      return raw ? JSON.parse(raw) : { count: 0, lastClaimed: null };
+    }
+
+    function saveStreakData(data) {
+      localStorage.setItem('motiv_streak', JSON.stringify(data));
+    }
+
+    function isSameDay(dateStr) {
+      if (!dateStr) return false;
+      const last = new Date(dateStr);
+      const now  = new Date();
+      return last.getFullYear() === now.getFullYear() &&
+             last.getMonth()    === now.getMonth()    &&
+             last.getDate()     === now.getDate();
+    }
+
+    function isYesterday(dateStr) {
+      if (!dateStr) return false;
+      const last = new Date(dateStr);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return last.getFullYear() === yesterday.getFullYear() &&
+             last.getMonth()    === yesterday.getMonth()    &&
+             last.getDate()     === yesterday.getDate();
+    }
+
+    function renderStreak() {
+      const { count, lastClaimed } = getStreakData();
+      const alreadyClaimed = isSameDay(lastClaimed);
+
+      document.getElementById('streak-badge').textContent =
+        count === 0 ? '🔥 0 day streak'
+        : count === 1 ? '🔥 1 day streak'
+        : `🔥 ${count} day streak`;
+
+      const btn = document.getElementById('claim-btn');
+      if (alreadyClaimed) {
+        btn.textContent  = '✅ Claimed';
+        btn.disabled     = true;
+      } else {
+        btn.textContent  = '⚡ Claim Today';
+        btn.disabled     = false;
+      }
+    }
+
+    function claimStreak() {
+      const data = getStreakData();
+      const today = new Date().toISOString();
+
+      if (isSameDay(data.lastClaimed)) return; // already claimed today
+
+      // If last claim was yesterday, continue streak; else reset to 1
+      if (isYesterday(data.lastClaimed)) {
+        data.count += 1;
+      } else {
+        data.count = 1;
+      }
+
+      data.lastClaimed = today;
+      saveStreakData(data);
+      renderStreak();
+
+      // Little pulse animation on badge
+      const badge = document.getElementById('streak-badge');
+      badge.style.transform = 'scale(1.15)';
+      badge.style.transition = 'transform 0.2s';
+      setTimeout(() => { badge.style.transform = 'scale(1)'; }, 200);
+    }
 
     window.addEventListener('load', async () => {
       await Clerk.load();
@@ -770,6 +863,7 @@
 
       refreshBackground();
       renderDashboard();
+      renderStreak();
     }
 
     // ── BACKGROUND ────────────────────────────────────────────
