@@ -138,6 +138,38 @@
     }
     .sign-out-btn:hover { background: rgba(255,92,0,0.1); }
 
+    .user-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,92,0,0.12);
+      border: 1px solid rgba(255,92,0,0.25);
+      border-radius: 10px; padding: 6px 12px;
+    }
+    .user-avatar-sm {
+      width: 22px; height: 22px; border-radius: 50%;
+      object-fit: cover; border: 1px solid var(--brand);
+    }
+    .user-pill-name {
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--brand); max-width: 80px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .btn-signout-tasks {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; width: 100%; margin-top: 0.75rem;
+      padding: 12px; border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted); font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-signout-tasks:hover {
+      border-color: rgba(255,92,0,0.3);
+      color: var(--brand);
+      background: rgba(255,92,0,0.05);
+    }
+
     /* ── AUTH GATE SCREEN ── */
     #auth-gate {
       display: none;
@@ -542,11 +574,7 @@
       <div class="tab-group">
         <button onclick="showPage('quotes')"    id="tab-quotes"    class="tab-btn active">Quotes</button>
         <button onclick="showPage('dashboard')" id="tab-dashboard" class="tab-btn">Dashboard</button>
-      </div>
-
-      <!-- ✅ CLERK: Auth area — swaps between sign-in button and user info -->
-      <div id="nav-auth-area">
-        <!-- Filled dynamically by updateAuthUI() -->
+        <div id="nav-auth-area"></div>
       </div>
     </div>
   </nav>
@@ -639,6 +667,7 @@
           <div class="panel-title">Today's Tasks</div>
           <div id="goal-items"></div>
           <button onclick="openModal()" class="btn-add">+ Add new goal</button>
+          <div id="tasks-signout-area"></div>
         </div>
       </div>
     </div>
@@ -765,20 +794,32 @@
     });
 
     function updateAuthUI() {
-      const authArea = document.getElementById('nav-auth-area');
-      const user = Clerk.user;
+      const authArea      = document.getElementById('nav-auth-area');
+      const signoutArea   = document.getElementById('tasks-signout-area');
+      const user          = Clerk.user;
 
       if (user) {
-        // User is signed in → show avatar + name + sign out
         const firstName = user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || 'Friend';
         const avatar    = user.imageUrl || '';
 
+        // Nav: show avatar + first name as a tab-like pill (no sign out here)
         authArea.innerHTML = `
-          <div class="user-area">
-            ${avatar ? `<img src="${avatar}" class="user-avatar" alt="${firstName}" onclick="Clerk.openUserProfile()">` : ''}
-            <span class="user-name">${firstName}</span>
-            <button class="sign-out-btn" onclick="handleSignOut()">Sign out</button>
+          <div class="user-pill">
+            ${avatar ? `<img src="${avatar}" class="user-avatar-sm" alt="${firstName}">` : ''}
+            <span class="user-pill-name">${firstName}</span>
           </div>`;
+
+        // Tasks panel: show sign-out button
+        if (signoutArea) {
+          signoutArea.innerHTML = `
+            <button class="btn-signout-tasks" onclick="handleSignOut()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              Sign Out
+            </button>`;
+        }
 
         // Update dashboard greeting
         const greetingEl = document.getElementById('dash-greeting');
@@ -786,15 +827,16 @@
           greetingEl.innerHTML = `Keep pushing,<br><span class="accent">${firstName}.</span>`;
         }
 
-        // Show app, hide gate
         document.getElementById('auth-gate').classList.remove('visible');
         document.getElementById('app-main').style.display = 'block';
 
       } else {
-        // Signed out → show Sign In button
-        authArea.innerHTML = `<button class="auth-btn" onclick="signInWithEmail()">Sign In</button>`;
+        // Nav: Sign In button inside tab group
+        authArea.innerHTML = `<button class="tab-btn" onclick="signInWithEmail()" style="color:#FF5C00;font-weight:700;">Sign In</button>`;
 
-        // Hide app main, show gate only if on dashboard
+        // Tasks panel: no sign-out needed
+        if (signoutArea) signoutArea.innerHTML = '';
+
         document.getElementById('auth-gate').classList.remove('visible');
         document.getElementById('app-main').style.display = 'block';
       }
