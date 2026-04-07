@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Motiv — Daily Inspiration</title>
 
-  <!-- ✅ CLERK: Updated CSP — removed Supabase, added Clerk domains -->
+  <!-- ✅ CLERK: Updated CSP -->
   <meta http-equiv="Content-Security-Policy"
     content="
       default-src 'self';
@@ -15,15 +15,19 @@
                   https://cdnjs.cloudflare.com
                   https://*.clerk.accounts.dev
                   https://clerk.com
-                  https://*.clerk.com;
+                  https://*.clerk.com
+                  https://js.puter.com;
       style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src    https://fonts.gstatic.com;
       img-src     'self' data: blob: https://images.unsplash.com https://*.clerk.com https://img.clerk.com;
-      connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.com;
+      connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.com https://api.puter.com;
       frame-src   https://*.clerk.accounts.dev https://*.clerk.com;
     ">
 
-  <!-- ✅ CLERK: ClerkJS CDN (replaces @supabase/supabase-js) -->
+  <!-- ✅ Puter.js for free LLM access -->
+  <script src="https://js.puter.com/v2/"></script>
+
+  <!-- ✅ CLERK: ClerkJS CDN -->
   <script
     async
     crossorigin="anonymous"
@@ -285,6 +289,7 @@
       font-size: clamp(22px, 6.5vw, 36px);
       text-shadow: 0 4px 24px rgba(0,0,0,0.8);
       margin-bottom: 1.5rem;
+      min-height: 120px;
     }
 
     .card-author-wrap {
@@ -339,6 +344,14 @@
       display: flex; align-items: center; justify-content: center;
     }
     .btn-refresh:hover { background: rgba(255,255,255,0.1); }
+
+    .btn-refresh.spinning svg {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
 
     /* ── DASHBOARD ── */
     #page-dashboard { padding-top: 1.5rem; }
@@ -560,6 +573,27 @@
       transition: opacity 0.2s;
     }
     .btn-confirm:hover { opacity: 0.85; }
+
+    /* ── LOADING STATES ── */
+    .quote-loading {
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+      color: rgba(255,255,255,0.6);
+    }
+    .quote-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .special-day-badge {
+      background: linear-gradient(135deg, var(--brand), #ff8c00);
+      color: #fff; padding: 4px 12px;
+      border-radius: 20px; font-size: 10px;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 1rem;
+      display: inline-block;
+    }
   </style>
 </head>
 
@@ -574,6 +608,8 @@
       <div class="tab-group">
         <button onclick="showPage('quotes')"    id="tab-quotes"    class="tab-btn active">Quotes</button>
         <button onclick="showPage('dashboard')" id="tab-dashboard" class="tab-btn">Dashboard</button>
+        <!-- ✅ FIXED: Separate Sign In button, only shows when logged out -->
+        <button onclick="openSignIn()" id="nav-signin-btn" class="tab-btn" style="display:none; color:#FF5C00; font-weight:700;">Sign In</button>
         <div id="nav-auth-area"></div>
       </div>
     </div>
@@ -610,9 +646,15 @@
         <div class="card-brand-tag">Motiv</div>
         <div class="card-content">
           <span class="card-eyebrow">Daily Wisdom</span>
-          <p id="hero-text"></p>
+          <div id="special-day-badge" class="special-day-badge" style="display:none;"></div>
+          <p id="hero-text">
+            <span class="quote-loading">
+              <div class="quote-spinner"></div>
+              Generating inspiration...
+            </span>
+          </p>
           <div class="card-author-wrap">
-            <p id="hero-author"></p>
+            <p id="hero-author">— AI Curator</p>
             <p id="hero-year"></p>
           </div>
           <div id="hero-date"></div>
@@ -625,7 +667,7 @@
             </svg>
             Save Quote
           </button>
-          <button onclick="refreshBackground()" class="btn-refresh">
+          <button onclick="refreshQuote()" id="refresh-btn" class="btn-refresh" title="New Quote">
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -687,17 +729,136 @@
   </div>
 
   <script>
-    // ── DATA ──────────────────────────────────────────────────
-    const quotes = [
-      { text: "The secret of getting ahead is getting started.",            author: "— Mark Twain",        year: "1890" },
-      { text: "Believe you can and you're halfway there.",                  author: "— Theodore Roosevelt", year: "1910" },
-      { text: "Success is not final; failure is not fatal.",                author: "— Winston Churchill",  year: "1941" },
-      { text: "Dream big and dare to fail.",                                author: "— Norman Vaughan",     year: "1994" },
-      { text: "Stay hungry, stay foolish.",                                 author: "— Steve Jobs",         year: "2005" },
-      { text: "It always seems impossible until it's done.",                author: "— Nelson Mandela",     year: "2001" },
-      { text: "Discipline is the bridge between goals and accomplishment.", author: "— Jim Rohn",           year: "1980" }
-    ];
+    // ── SPECIAL DAYS SYSTEM ───────────────────────────────────
+    // Lightweight holiday/special day detection without external API
+    const specialDays = {
+      '01-01': { name: "New Year's Day", theme: "new beginnings" },
+      '02-14': { name: "Valentine's Day", theme: "love and connection" },
+      '03-08': { name: "International Women's Day", theme: "empowerment and equality" },
+      '03-17': { name: "St. Patrick's Day", theme: "luck and fortune" },
+      '04-01': { name: "April Fools' Day", theme: "humor and perspective" },
+      '04-07': { name: "World Health Day", theme: "wellness and self-care" },
+      '04-22': { name: "Earth Day", theme: "nature and sustainability" },
+      '05-01': { name: "Labor Day", theme: "hard work and dedication" },
+      '05-04': { name: "Star Wars Day", theme: "hope and rebellion" },
+      '06-05': { name: "World Environment Day", theme: "environmental stewardship" },
+      '06-21': { name: "International Yoga Day", theme: "mindfulness and balance" },
+      '07-04': { name: "Independence Day (US)", theme: "freedom and liberty" },
+      '09-05': { name: "International Day of Charity", theme: "kindness and giving" },
+      '10-10': { name: "World Mental Health Day", theme: "mental wellness" },
+      '10-31': { name: "Halloween", theme: "facing fears" },
+      '11-11': { name: "Veterans Day", theme: "courage and service" },
+      '11-28': { name: "Thanksgiving (US)", theme: "gratitude" },
+      '12-25': { name: "Christmas Day", theme: "joy and giving" },
+      '12-31': { name: "New Year's Eve", theme: "reflection and hope" }
+    };
 
+    function getSpecialDay() {
+      const today = new Date();
+      const key = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      return specialDays[key] || null;
+    }
+
+    function getDayOfWeekTheme() {
+      const day = new Date().getDay();
+      const themes = [
+        "reflection and preparation", // Sunday
+        "ambition and fresh starts",  // Monday
+        "productivity and progress",  // Tuesday
+        "connection and collaboration", // Wednesday
+        "determination and resilience", // Thursday
+        "celebration and accomplishment", // Friday
+        "adventure and exploration"   // Saturday
+      ];
+      return themes[day];
+    }
+
+    // ── LLM QUOTE GENERATION ──────────────────────────────────
+    // Uses Puter.js for free LLM access - no API key needed
+    
+    let currentQuote = null;
+    let isGenerating = false;
+
+    async function generateSmartQuote() {
+      if (isGenerating) return;
+      isGenerating = true;
+      
+      const btn = document.getElementById('refresh-btn');
+      btn.classList.add('spinning');
+      
+      const specialDay = getSpecialDay();
+      const dayTheme = getDayOfWeekTheme();
+      
+      let prompt;
+      if (specialDay) {
+        prompt = `Generate an inspiring, motivational quote for ${specialDay.name}. The theme is ${specialDay.theme}. Make it sound like it could be from a famous philosopher or modern thought leader. Keep it under 20 words. Only return the quote text, no attribution or explanation.`;
+      } else {
+        prompt = `Generate an inspiring, motivational quote about ${dayTheme}. Make it sound wise and timeless, like from a famous author or philosopher. Keep it under 20 words. Only return the quote text, no attribution or explanation.`;
+      }
+
+      try {
+        // Use Puter.ai.chat() for free LLM generation [^10^]
+        const response = await puter.ai.chat(prompt, {
+          model: "gpt-4o-mini" // Fast, cost-effective model
+        });
+        
+        const quoteText = response.trim().replace(/^["']|["']$/g, '');
+        currentQuote = {
+          text: quoteText,
+          author: specialDay ? `— ${specialDay.name}` : "— Daily Wisdom",
+          year: new Date().getFullYear().toString(),
+          isSpecial: !!specialDay,
+          specialDayName: specialDay?.name
+        };
+        
+        renderQuote();
+      } catch (error) {
+        console.error('Quote generation failed:', error);
+        // Fallback to generic inspirational message
+        currentQuote = {
+          text: "The best way to predict the future is to create it.",
+          author: "— Peter Drucker",
+          year: "2024",
+          isSpecial: false
+        };
+        renderQuote();
+      } finally {
+        isGenerating = false;
+        btn.classList.remove('spinning');
+      }
+    }
+
+    function renderQuote() {
+      if (!currentQuote) return;
+      
+      const textEl = document.getElementById('hero-text');
+      const authorEl = document.getElementById('hero-author');
+      const yearEl = document.getElementById('hero-year');
+      const badgeEl = document.getElementById('special-day-badge');
+      
+      // Animate text change
+      textEl.style.opacity = '0';
+      setTimeout(() => {
+        textEl.textContent = `"${currentQuote.text}"`;
+        authorEl.textContent = currentQuote.author;
+        yearEl.textContent = currentQuote.year;
+        
+        if (currentQuote.isSpecial) {
+          badgeEl.textContent = `✨ ${currentQuote.specialDayName}`;
+          badgeEl.style.display = 'inline-block';
+        } else {
+          badgeEl.style.display = 'none';
+        }
+        
+        textEl.style.opacity = '1';
+      }, 200);
+    }
+
+    function refreshQuote() {
+      generateSmartQuote();
+    }
+
+    // ── DATA ──────────────────────────────────────────────────
     const bgImages = [
       'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080&q=80',
       'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1080&q=80',
@@ -712,8 +873,7 @@
     ];
 
     // ── CLERK AUTH ────────────────────────────────────────────
-    // ✅ Clerk loads asynchronously via the script tag above.
-    // We wait for window.__clerk_loaded or the 'clerk:loaded' event.
+    // ✅ FIXED: Clear separation between Sign In and Dashboard
 
     // ── STREAK LOGIC ──────────────────────────────────────────
     function getStreakData() {
@@ -767,9 +927,8 @@
       const data = getStreakData();
       const today = new Date().toISOString();
 
-      if (isSameDay(data.lastClaimed)) return; // already claimed today
+      if (isSameDay(data.lastClaimed)) return;
 
-      // If last claim was yesterday, continue streak; else reset to 1
       if (isYesterday(data.lastClaimed)) {
         data.count += 1;
       } else {
@@ -780,7 +939,6 @@
       saveStreakData(data);
       renderStreak();
 
-      // Little pulse animation on badge
       const badge = document.getElementById('streak-badge');
       badge.style.transform = 'scale(1.15)';
       badge.style.transition = 'transform 0.2s';
@@ -795,6 +953,7 @@
 
     function updateAuthUI() {
       const authArea      = document.getElementById('nav-auth-area');
+      const signinBtn     = document.getElementById('nav-signin-btn');
       const signoutArea   = document.getElementById('tasks-signout-area');
       const user          = Clerk.user;
 
@@ -802,7 +961,8 @@
         const firstName = user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || 'Friend';
         const avatar    = user.imageUrl || '';
 
-        // Nav: show avatar + first name as a tab-like pill (no sign out here)
+        // Show user pill, hide sign in button
+        signinBtn.style.display = 'none';
         authArea.innerHTML = `
           <div class="user-pill">
             ${avatar ? `<img src="${avatar}" class="user-avatar-sm" alt="${firstName}">` : ''}
@@ -831,8 +991,9 @@
         document.getElementById('app-main').style.display = 'block';
 
       } else {
-        // Nav: Sign In button inside tab group
-        authArea.innerHTML = `<button class="tab-btn" onclick="signInWithEmail()" style="color:#FF5C00;font-weight:700;">Sign In</button>`;
+        // Show Sign In button, clear user pill
+        signinBtn.style.display = 'block';
+        authArea.innerHTML = '';
 
         // Tasks panel: no sign-out needed
         if (signoutArea) signoutArea.innerHTML = '';
@@ -840,6 +1001,24 @@
         document.getElementById('auth-gate').classList.remove('visible');
         document.getElementById('app-main').style.display = 'block';
       }
+    }
+
+    // ✅ FIXED: Explicit Sign In function
+    function openSignIn() {
+      Clerk.openSignIn({
+        afterSignInUrl: window.location.href,
+        afterSignUpUrl: window.location.href,
+        appearance: {
+          variables: {
+            colorPrimary: '#FF5C00',
+            colorBackground: '#1A1A1A',
+            colorText: '#f3f4f6',
+            colorInputBackground: '#0E0E0E',
+            colorInputText: '#f3f4f6',
+            borderRadius: '16px',
+          }
+        }
+      });
     }
 
     async function signInWithGoogle() {
@@ -851,7 +1030,6 @@
     }
 
     async function signInWithEmail() {
-      // Opens Clerk's built-in sign-in modal
       Clerk.openSignIn({
         afterSignInUrl: window.location.href,
         afterSignUpUrl: window.location.href,
@@ -873,10 +1051,10 @@
       updateAuthUI();
     }
 
-    // ── PROTECTED: Dashboard requires sign-in ──────────────────
+    // ✅ FIXED: Dashboard is now protected, Sign In is separate
     function showPage(id) {
       if (id === 'dashboard' && !Clerk.user) {
-        // Show auth gate instead of dashboard
+        // Show auth gate for dashboard when not logged in
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('auth-gate').classList.add('visible');
         document.getElementById('tab-quotes').classList.remove('active');
@@ -893,17 +1071,12 @@
 
     // ── INIT ──────────────────────────────────────────────────
     function init() {
-      const today     = new Date();
-      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-      const q         = quotes[dayOfYear % quotes.length];
-
-      document.getElementById('hero-text').textContent   = '"' + q.text + '"';
-      document.getElementById('hero-author').textContent = q.author;
-      document.getElementById('hero-year').textContent   = q.year;
-      document.getElementById('hero-date').textContent   = today.toLocaleDateString('en-US',
+      const today = new Date();
+      document.getElementById('hero-date').textContent = today.toLocaleDateString('en-US',
         { day: 'numeric', month: 'long', year: 'numeric' });
 
       refreshBackground();
+      generateSmartQuote(); // Generate dynamic quote instead of hardcoded
       renderDashboard();
       renderStreak();
     }
